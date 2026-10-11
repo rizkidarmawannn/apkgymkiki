@@ -27,7 +27,7 @@
     "env": {
         "APP_NAME": "GymTracker",
         "APP_ENV": "production",
-        "APP_DEBUG": "true",
+        "APP_DEBUG": "false",
         "APP_URL": "https://apkgymkiki.vercel.app",
         "APP_KEY": "base64:rIHT0O6HSDVFVI2JHWRjQ0pwL1bAmYwNYTM4u2ecETU=",
         "APP_CONFIG_CACHE": "/tmp/bootstrap/cache/config.php",
