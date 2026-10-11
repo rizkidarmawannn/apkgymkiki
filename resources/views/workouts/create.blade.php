@@ -9,32 +9,32 @@
         <p class="text-muted text-sm mb-0">Record your exercises, sets, weights and track rest times.</p>
     </div>
     <div class="d-flex align-center flex-gap-sm">
-        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Klik untuk On/Mute suara">
+        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Toggle audio alerts">
             <span id="audio-icon">🔊</span> <span id="audio-label">Sound Alerts: ON</span>
         </button>
-        <div class="workout-stopwatch badge badge-primary p-2 text-md" id="workout-stopwatch" style="font-size:1.05rem; padding: 8px 14px; border-radius: 9999px;">
-            ⏱️ <span id="stopwatch-display">00:00</span>
+        <div class="workout-stopwatch badge badge-primary" id="workout-stopwatch" style="font-size: 0.95rem; font-weight: 700; padding: 6px 14px; border-radius: 9999px;">
+            ⏱️ <span id="stopwatch-display" class="tabular-nums">00:00</span>
         </div>
     </div>
 </div>
 
 <!-- Rest Timer Floating Alert Banner (hidden by default) -->
-<div id="rest-timer-banner" class="card mb-4 p-3 bg-white" style="display: none; border: 1px solid #FDE68A; background: #FFFDF5; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);">
+<div id="rest-timer-banner" class="card mb-4 p-3" style="display: none; border: 1px solid var(--warning); background: var(--warning-light);">
     <div class="flex-between align-center mb-2">
-        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.8rem; padding: 4px 10px;">⏳ ISTIRAHAT ANTAR SET</span>
+        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">⏳ REST INTERVAL</span>
         <div class="rest-preset-btns d-flex flex-gap-sm">
             <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30">30s</button>
             <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60">60s</button>
             <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="90">90s</button>
-            <button type="button" class="btn btn-small btn-outline" id="cancel-rest-btn" style="color: var(--danger); border-color: #FECACA;">Skip</button>
+            <button type="button" class="btn btn-small btn-outline" id="cancel-rest-btn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Skip</button>
         </div>
     </div>
     <div class="rest-countdown-display text-center my-2">
-        <span id="rest-seconds" class="tabular-nums" style="font-size: 2.5rem; font-weight: 800; color: #D97706; line-height: 1;">60</span>
-        <span style="font-size: 0.95rem; color: #78350F; margin-left: 6px; font-weight: 500;">detik tersisa</span>
+        <span id="rest-seconds" class="tabular-nums" style="font-size: 2.25rem; font-weight: 800; color: var(--warning); line-height: 1;">60</span>
+        <span class="text-sm text-secondary" style="margin-left: 6px; font-weight: 500;">seconds left</span>
     </div>
-    <div class="progress-bar mt-2" style="background: #FEF3C7; height: 6px; border-radius: 9999px;">
-        <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: #F59E0B; border-radius: 9999px;"></div>
+    <div class="progress-bar mt-2" style="height: 6px; border-radius: 9999px;">
+        <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: var(--warning); border-radius: 9999px;"></div>
     </div>
 </div>
 
@@ -122,65 +122,65 @@
                     </div>
 
                     <!-- Multi-Set Table/List -->
-                    <div class="sets-wrapper card p-3 mb-3 bg-white">
+                    <div class="sets-wrapper mb-3">
                         <div class="flex-between align-center mb-2">
-                            <strong class="text-sm text-muted">SETS & REPS DETAILS (Naik / Turun per Set)</strong>
+                            <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SETS & PROGRESSION</span>
                             <button type="button" class="btn btn-small btn-outline add-set-btn">+ Add Set</button>
                         </div>
 
                         <!-- Header Kolom: SET, WEIGHT (KG), REPS, LIVE TIMER -->
-                        <div class="sets-table-header d-flex align-center flex-gap mb-1 px-2 text-xs text-muted" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem;">
-                            <span style="min-width: 48px;">Set</span>
+                        <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
+                            <span class="set-col-label">Set</span>
                             <span class="flex-1">Weight (kg)</span>
                             <span class="flex-1">Reps</span>
-                            <span style="min-width: 76px; text-align: center;">Live Set</span>
-                            <span style="width: 28px;"></span>
+                            <span class="set-col-timer text-center">Timer</span>
+                            <span class="set-col-action"></span>
                         </div>
 
                         <div class="sets-list-container">
                             <!-- Set 1 -->
-                            <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="0">
-                                <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 1</span>
+                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
+                                <span class="badge badge-secondary set-badge">Set 1</span>
                                 <div class="flex-1">
-                                    <input type="number" step="0.5" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
+                                    <input type="number" step="0.5" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                                 </div>
                                 <div class="flex-1">
-                                    <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
+                                    <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                                     ▶️ Start
                                 </button>
-                                <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                                <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
 
                             <!-- Set 2 -->
-                            <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="1">
-                                <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 2</span>
+                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
+                                <span class="badge badge-secondary set-badge">Set 2</span>
                                 <div class="flex-1">
-                                    <input type="number" step="0.5" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
+                                    <input type="number" step="0.5" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                                 </div>
                                 <div class="flex-1">
-                                    <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
+                                    <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                                     ▶️ Start
                                 </button>
-                                <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                                <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
 
                             <!-- Set 3 -->
-                            <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="2">
-                                <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 3</span>
+                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
+                                <span class="badge badge-secondary set-badge">Set 3</span>
                                 <div class="flex-1">
-                                    <input type="number" step="0.5" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
+                                    <input type="number" step="0.5" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                                 </div>
                                 <div class="flex-1">
-                                    <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
+                                    <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                                     ▶️ Start
                                 </button>
-                                <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                                <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
                         </div>
                     </div>
@@ -518,17 +518,17 @@
                     const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
 
                     newSetRow.innerHTML = `
-                        <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set ${nextSetIdx + 1}</span>
+                        <span class="badge badge-secondary set-badge">Set ${nextSetIdx + 1}</span>
                         <div class="flex-1">
-                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][${nextSetIdx}][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required value="${lastWeight}">
+                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][${nextSetIdx}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="${lastWeight}">
                         </div>
                         <div class="flex-1">
-                            <input type="number" name="exercises[${exIdx}][sets_list][${nextSetIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="${lastReps}">
+                            <input type="number" name="exercises[${exIdx}][sets_list][${nextSetIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="${lastReps}">
                         </div>
-                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                             ▶️ Start
                         </button>
-                        <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                     `;
 
                     setupSetRowEvents(newSetRow);
@@ -595,44 +595,44 @@
             // Reset sets to 3 blank rows with set-row-timer-btn
             const setsContainer = newExRow.querySelector('.sets-list-container');
             setsContainer.innerHTML = `
-                <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="0">
-                    <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 1</span>
+                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
+                    <span class="badge badge-secondary set-badge">Set 1</span>
                     <div class="flex-1">
-                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
+                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                     </div>
                     <div class="flex-1">
-                        <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
+                        <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                         ▶️ Start
                     </button>
-                    <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                 </div>
-                <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="1">
-                    <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 2</span>
+                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
+                    <span class="badge badge-secondary set-badge">Set 2</span>
                     <div class="flex-1">
-                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
+                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                     </div>
                     <div class="flex-1">
-                        <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
+                        <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                         ▶️ Start
                     </button>
-                    <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                 </div>
-                <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="2">
-                    <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 3</span>
+                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
+                    <span class="badge badge-secondary set-badge">Set 3</span>
                     <div class="flex-1">
-                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
+                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                     </div>
                     <div class="flex-1">
-                        <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
+                        <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
                         ▶️ Start
                     </button>
-                    <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
+                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                 </div>
             `;
 
