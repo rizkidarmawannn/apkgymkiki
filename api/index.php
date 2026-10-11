@@ -46,19 +46,4 @@ putenv('DB_DATABASE=' . $tmpDb);
 $_ENV['DB_DATABASE'] = $tmpDb;
 $_SERVER['DB_DATABASE'] = $tmpDb;
 
-// Auto-migrate if tables are missing
-try {
-    $pdo = new PDO('sqlite:' . $tmpDb);
-    $check = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
-    if (!$check || !$check->fetch()) {
-        require_once __DIR__ . '/../vendor/autoload.php';
-        $app = require __DIR__ . '/../bootstrap/app.php';
-        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-        $kernel->call('migrate', ['--force' => true]);
-        $kernel->call('db:seed', ['--force' => true]);
-    }
-} catch (\Throwable $e) {
-    // Continue execution if migration check fails
-}
-
 require __DIR__ . '/../public/index.php';
