@@ -41,5 +41,25 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $user->id, 'date' => \Carbon\Carbon::today()],
             ['weight' => 58.5]
         );
+
+        // Seed kikihebat account as well
+        $user2 = \App\Models\User::firstOrCreate(
+            ['email' => 'hebat@gmail.com'],
+            [
+                'name' => 'kikihebat',
+                'password' => 'password',
+            ]
+        );
+
+        \App\Models\Profile::updateOrCreate(
+            ['user_id' => $user2->id],
+            [
+                'age' => 24,
+                'height' => 170,
+                'weight' => 60.0,
+                'target_weight' => 58.0,
+                'goal' => 'maintain',
+            ]
+        );
     }
 }

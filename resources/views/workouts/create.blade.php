@@ -3,31 +3,38 @@
 @section('title', 'New Workout')
 
 @section('content')
-<div class="page-header flex-between align-center mb-3">
-    <h1>New Workout</h1>
-    <!-- Live Workout Timer Bar -->
-    <div class="workout-stopwatch badge badge-info p-2 text-md" id="workout-stopwatch" style="font-size:1.1rem; padding: 8px 14px;">
-        ⏱️ <span id="stopwatch-display">00:00</span>
+<div class="page-header flex-between align-center mb-4">
+    <div>
+        <h1 class="mb-1">New Workout</h1>
+        <p class="text-muted text-sm mb-0">Record your exercises, sets, weights and track rest times.</p>
+    </div>
+    <div class="d-flex align-center flex-gap-sm">
+        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Klik untuk On/Mute suara">
+            <span id="audio-icon">🔊</span> <span id="audio-label">Sound Alerts: ON</span>
+        </button>
+        <div class="workout-stopwatch badge badge-primary p-2 text-md" id="workout-stopwatch" style="font-size:1.05rem; padding: 8px 14px; border-radius: 9999px;">
+            ⏱️ <span id="stopwatch-display">00:00</span>
+        </div>
     </div>
 </div>
 
 <!-- Rest Timer Floating Alert Banner (hidden by default) -->
-<div id="rest-timer-banner" class="card mb-4 p-3 bg-primary text-white" style="display: none; border-left: 6px solid var(--warning);">
+<div id="rest-timer-banner" class="card mb-4 p-4 text-white" style="display: none; background: linear-gradient(135deg, #1E293B, #0F172A); border: 2px solid #F59E0B; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25);">
     <div class="flex-between align-center mb-2">
-        <strong style="font-size: 1.1rem;">⏳ REST TIMER</strong>
-        <div class="rest-preset-btns btn-group">
-            <button type="button" class="btn btn-small btn-outline text-white set-rest-time" data-seconds="30">30s</button>
-            <button type="button" class="btn btn-small btn-outline text-white set-rest-time" data-seconds="60">60s</button>
-            <button type="button" class="btn btn-small btn-outline text-white set-rest-time" data-seconds="90">90s</button>
-            <button type="button" class="btn btn-small btn-danger btn-small" id="cancel-rest-btn">Skip</button>
+        <strong style="font-size: 1.05rem; letter-spacing: 0.05em; color: #FBBF24;">⏳ REST TIMER (Istirahat Antar Set)</strong>
+        <div class="rest-preset-btns d-flex flex-gap-sm">
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30" style="color:#F1F5F9; border-color: rgba(255,255,255,0.2);">30s</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60" style="color:#F1F5F9; border-color: rgba(255,255,255,0.2);">60s</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="90" style="color:#F1F5F9; border-color: rgba(255,255,255,0.2);">90s</button>
+            <button type="button" class="btn btn-small btn-danger" id="cancel-rest-btn">Skip</button>
         </div>
     </div>
-    <div class="rest-countdown-display text-center my-2">
-        <span id="rest-seconds" style="font-size: 2.5rem; font-weight: 700; color: #F59E0B;">60</span>
-        <span style="font-size: 1.2rem;">seconds remaining</span>
+    <div class="rest-countdown-display text-center my-3">
+        <span id="rest-seconds" class="tabular-nums" style="font-size: 3rem; font-weight: 800; color: #F59E0B; text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);">60</span>
+        <span style="font-size: 1.1rem; color: #94A3B8; margin-left: 8px;">detik tersisa</span>
     </div>
-    <div class="progress-bar mt-2" style="background: rgba(255,255,255,0.2); height: 8px;">
-        <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: #F59E0B;"></div>
+    <div class="progress-bar mt-2" style="background: rgba(255,255,255,0.12); height: 10px; border-radius: 9999px;">
+        <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: linear-gradient(90deg, #F59E0B, #EF4444); border-radius: 9999px;"></div>
     </div>
 </div>
 
@@ -190,6 +197,83 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- 0. AUDIO SYNTHESIS ENGINE (Web Audio API) ---
+        const GymAudio = {
+            ctx: null,
+            muted: false,
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            playTone(freq, type, duration, delay = 0, volume = 0.3) {
+                if (this.muted) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now + delay);
+                    
+                    gain.gain.setValueAtTime(volume, now + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(now + delay);
+                    osc.stop(now + delay + duration);
+                } catch(e) { console.warn('Audio play error:', e); }
+            },
+            playStartSound() {
+                // Energetic 2-tone ascending chime for starting set or workout
+                this.playTone(587.33, 'sine', 0.12, 0, 0.35);     // D5
+                this.playTone(880.00, 'triangle', 0.22, 0.11, 0.4); // A5
+            },
+            playCountdownTick() {
+                // Short crisp tick for 3, 2, 1 seconds
+                this.playTone(880, 'sine', 0.08, 0, 0.25);
+            },
+            playRestCompleteSound() {
+                // Energetic 3-tone victory bell chime when rest time is over!
+                this.playTone(523.25, 'sine', 0.15, 0, 0.35);       // C5
+                this.playTone(659.25, 'sine', 0.15, 0.14, 0.35);    // E5
+                this.playTone(1046.50, 'triangle', 0.5, 0.28, 0.45); // C6 (High Ding!)
+            }
+        };
+
+        // Audio toggle button listener
+        const audioBtn = document.getElementById('audio-toggle-btn');
+        const audioIcon = document.getElementById('audio-icon');
+        const audioLabel = document.getElementById('audio-label');
+        if (audioBtn) {
+            audioBtn.addEventListener('click', function() {
+                GymAudio.muted = !GymAudio.muted;
+                if (GymAudio.muted) {
+                    audioIcon.textContent = '🔇';
+                    audioLabel.textContent = 'Sound Alerts: OFF';
+                    audioBtn.style.background = '#F1F5F9';
+                    audioBtn.style.color = '#64748B';
+                    audioBtn.style.borderColor = '#CBD5E1';
+                } else {
+                    GymAudio.init();
+                    GymAudio.playStartSound();
+                    audioIcon.textContent = '🔊';
+                    audioLabel.textContent = 'Sound Alerts: ON';
+                    audioBtn.style.background = '#EFF6FF';
+                    audioBtn.style.color = '#1D4ED8';
+                    audioBtn.style.borderColor = '#BFDBFE';
+                }
+            });
+        }
+
         // --- 1. OVERALL WORKOUT STOPWATCH ---
         let totalSeconds = 0;
         const stopwatchDisplay = document.getElementById('stopwatch-display');
@@ -231,27 +315,20 @@
                 const pct = (restRemaining / restTotal) * 100;
                 restProgress.style.width = `${pct}%`;
 
+                // Countdown tick on last 3, 2, 1 seconds
+                if (restRemaining > 0 && restRemaining <= 3) {
+                    GymAudio.playCountdownTick();
+                }
+
                 if (restRemaining <= 0) {
                     clearInterval(restInterval);
-                    restDisplay.textContent = 'REST DONE! 🔔';
-                    playBeep();
+                    restDisplay.textContent = 'ISTIRAHAT SELESAI! 🔔';
+                    GymAudio.playRestCompleteSound(); // Play victory chime sound!
                     setTimeout(() => {
                         restBanner.style.display = 'none';
-                    }, 2500);
+                    }, 3000);
                 }
             }, 1000);
-        }
-
-        function playBeep() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = 880;
-                osc.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.3);
-            } catch(e) {}
         }
 
         cancelRestBtn.addEventListener('click', function() {
@@ -324,6 +401,7 @@
                     const totalSets = setsContainer.querySelectorAll('.set-item-row').length;
 
                     if (status === 'idle') {
+                        GymAudio.playStartSound();
                         this.dataset.status = 'running';
                         this.className = 'btn btn-small btn-warning set-timer-btn';
                         setSecs = 0;
