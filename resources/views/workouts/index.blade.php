@@ -1,42 +1,42 @@
 @extends('layouts.app')
 
-@section('title', 'Workouts')
+@section('title', 'Latihan')
 
 @section('content')
-<div class="page-header flex-between">
-    <h1>Workouts</h1>
-    <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Start Workout</a>
+<div class="page-header flex-between align-center mb-4">
+    <h1 class="mb-0">Latihan</h1>
+    <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Mulai Latihan</a>
 </div>
 
 <div class="workouts-list">
     @forelse($workouts ?? [] as $workout)
-        <a href="{{ route('workouts.show', $workout) }}" class="card workout-card-link">
-            <div class="workout-card-header flex-between">
+        <a href="{{ route('workouts.show', $workout) }}" class="workout-card-link">
+            <div class="flex-between align-center mb-2">
                 <h3>{{ $workout->name }}</h3>
-                <span class="text-muted text-small">{{ \Carbon\Carbon::parse($workout->date)->format('M d, Y') }}</span>
+                <span class="text-muted text-sm">{{ \Carbon\Carbon::parse($workout->date)->locale('id')->translatedFormat('d M Y') }}</span>
             </div>
-            <div class="workout-card-body mt-2">
-                <div class="workout-meta">
-                    <span class="badge badge-info">🏋️ {{ $workout->workoutExercises->count() }} exercises</span>
-                    @if($workout->duration)
-                        <span class="badge badge-secondary">⏱️ {{ $workout->duration }} min</span>
-                    @endif
-                    <span class="badge badge-{{ $workout->status === 'completed' ? 'success' : 'warning' }}">{{ ucfirst($workout->status) }}</span>
-                </div>
+            <div class="workout-meta">
+                <span class="badge badge-info">{{ $workout->workoutExercises->count() }} gerakan</span>
+                @if($workout->duration)
+                    <span class="badge badge-secondary">{{ $workout->duration }} menit</span>
+                @endif
+                <span class="badge badge-{{ $workout->status === 'completed' ? 'success' : 'warning' }}">
+                    {{ $workout->status === 'completed' ? 'Selesai' : 'Sedang Berjalan' }}
+                </span>
             </div>
         </a>
     @empty
-        <div class="card empty-state text-center p-5">
-            <div class="empty-icon mb-3">🏋️</div>
-            <h3>No workouts yet</h3>
-            <p class="text-muted mb-4">Start your first workout to track your progress!</p>
-            <a href="{{ route('workouts.create') }}" class="btn btn-primary">Start Your First Workout</a>
+        <div class="card text-center" style="padding: 40px 24px;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🏋️</div>
+            <h3 class="mb-2">Belum ada latihan</h3>
+            <p class="text-muted mb-4">Mulai latihan pertamamu untuk melacak progres!</p>
+            <a href="{{ route('workouts.create') }}" class="btn btn-primary mx-auto" style="max-width: 220px;">Mulai Latihan Pertama</a>
         </div>
     @endforelse
 </div>
 
 @if(isset($workouts) && method_exists($workouts, 'links'))
-    <div class="pagination-wrapper mt-4">
+    <div class="mt-4">
         {{ $workouts->links() }}
     </div>
 @endif

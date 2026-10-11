@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Food')
+@section('title', 'Catatan Makanan')
 
 @section('content')
 @php
     $date = request('date', date('Y-m-d'));
     $prevDate = date('Y-m-d', strtotime($date . ' -1 day'));
     $nextDate = date('Y-m-d', strtotime($date . ' +1 day'));
-    $displayDate = (date('Y-m-d') == $date) ? 'Today' : date('M d, Y', strtotime($date));
+    $displayDate = (date('Y-m-d') == $date) ? 'Hari Ini' : date('d M Y', strtotime($date));
     
     $totalCal = $totalCalories ?? 0;
     $targetCal = $calorieTarget ?? 2000;
@@ -17,7 +17,7 @@
 @endphp
 
 <div class="page-header flex-between align-center mb-4">
-    <h1>Food Diary</h1>
+    <h1>Catatan Makanan</h1>
     <div class="date-navigation flex-center">
         <a href="{{ route('foods.index', ['date' => $prevDate]) }}" class="btn btn-outline btn-small">&lt;</a>
         <span class="date-display mx-3 fw-bold">{{ $displayDate }}</span>
@@ -29,7 +29,7 @@
     <div class="card-body">
         <div class="summary-stats d-flex justify-content-between mb-3">
             <div class="stat-item text-center">
-                <small class="text-muted d-block">Today's Calories</small>
+                <small class="text-muted d-block">Kalori Hari Ini</small>
                 <strong class="text-xl">{{ number_format($totalCal) }}</strong>
             </div>
             <div class="stat-item text-center">
@@ -37,9 +37,9 @@
                 <strong class="text-xl">{{ number_format($targetCal) }}</strong>
             </div>
             <div class="stat-item text-center">
-                <small class="text-muted d-block">Remaining</small>
+                <small class="text-muted d-block">Sisa Kalori</small>
                 <strong class="text-xl {{ $remainingCal < 0 ? 'text-danger' : 'text-success' }}">
-                    {{ number_format(abs($remainingCal)) }} {{ $remainingCal < 0 ? 'over' : '' }}
+                    {{ number_format(abs($remainingCal)) }} {{ $remainingCal < 0 ? 'lebih' : '' }}
                 </strong>
             </div>
         </div>
@@ -57,7 +57,7 @@
 
 <div class="card add-food-card mb-4">
     <div class="card-header">
-        <h3 class="m-0">Add Food</h3>
+        <h3 class="m-0">Tambah Makanan</h3>
     </div>
     <div class="card-body">
         <form action="{{ route('foods.store') }}" method="POST" class="add-food-form">
@@ -66,46 +66,54 @@
             
             <div class="form-row">
                 <div class="form-group col-12 col-md-4">
-                    <label>Food Name</label>
-                    <input type="text" name="food_name" class="form-control" required placeholder="e.g. Oatmeal">
+                    <label>Nama Makanan</label>
+                    <input type="text" name="food_name" class="form-control" required placeholder="cth. Oatmeal / Dada Ayam">
                 </div>
                 <div class="form-group col-12 col-md-3">
-                    <label>Meal</label>
+                    <label>Waktu Makan</label>
                     <select name="meal" class="form-control" required>
-                        <option value="breakfast">Breakfast</option>
-                        <option value="lunch">Lunch</option>
-                        <option value="dinner">Dinner</option>
-                        <option value="snack">Snack</option>
+                        <option value="breakfast">Sarapan</option>
+                        <option value="lunch">Makan Siang</option>
+                        <option value="dinner">Makan Malam</option>
+                        <option value="snack">Camilan</option>
                     </select>
                 </div>
                 <div class="form-group col-4 col-md-2">
-                    <label>Portion</label>
-                    <input type="text" name="portion" class="form-control" placeholder="1 bowl" required>
+                    <label>Porsi</label>
+                    <input type="text" name="portion" class="form-control" placeholder="1 mangkok / 150g" required>
                 </div>
                 <div class="form-group col-4 col-md-2">
-                    <label>Calories</label>
-                    <input type="number" name="calories" class="form-control" required placeholder="kcal">
+                    <label>Kalori (kkal)</label>
+                    <input type="number" name="calories" class="form-control" required placeholder="kkal">
                 </div>
                 <div class="form-group col-4 col-md-2">
                     <label>Protein (g)</label>
                     <input type="number" step="0.1" name="protein" class="form-control" placeholder="g">
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary mt-2">+ Add Food</button>
+            <button type="submit" class="btn btn-primary mt-2">+ Tambah Makanan</button>
         </form>
     </div>
 </div>
 
 <div class="food-log">
+    @php
+        $mealLabels = [
+            'breakfast' => 'Sarapan',
+            'lunch' => 'Makan Siang',
+            'dinner' => 'Makan Malam',
+            'snack' => 'Camilan'
+        ];
+    @endphp
     @foreach(['breakfast', 'lunch', 'dinner', 'snack'] as $mealType)
         <div class="meal-section card mb-3">
             <div class="card-header flex-between bg-light">
-                <h3 class="m-0 text-capitalize">{{ $mealType }}</h3>
+                <h3 class="m-0 text-capitalize">{{ $mealLabels[$mealType] ?? $mealType }}</h3>
                 @php 
                     $mealFoods = isset($foodLogs[$mealType]) ? $foodLogs[$mealType] : collect(); 
                     $mealCal = $mealFoods->sum('calories');
                 @endphp
-                <span class="badge badge-secondary">{{ number_format($mealCal) }} kcal</span>
+                <span class="badge badge-secondary">{{ number_format($mealCal) }} kkal</span>
             </div>
             <div class="card-body p-0">
                 @if($mealFoods->count() > 0)
@@ -117,9 +125,9 @@
                                     <small class="text-muted">{{ $food->portion }} &bull; {{ $food->protein ?? 0 }}g protein</small>
                                 </div>
                                 <div class="food-actions d-flex align-center flex-gap">
-                                    <span class="fw-bold mr-3">{{ $food->calories }} kcal</span>
+                                    <span class="fw-bold mr-3">{{ $food->calories }} kkal</span>
                                     <a href="{{ route('foods.edit', $food) }}" class="btn btn-small btn-outline">Edit</a>
-                                    <form action="{{ route('foods.destroy', $food) }}" method="POST" onsubmit="return confirm('Delete this food?');" class="d-inline">
+                                    <form action="{{ route('foods.destroy', $food) }}" method="POST" onsubmit="return confirm('Hapus makanan ini?');" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-small btn-danger">&times;</button>
@@ -130,7 +138,7 @@
                     </ul>
                 @else
                     <div class="p-3 text-center text-muted">
-                        <small>No food logged for {{ $mealType }}</small>
+                        <small>Belum ada makanan dicatat untuk {{ strtolower($mealLabels[$mealType] ?? $mealType) }}</small>
                     </div>
                 @endif
             </div>

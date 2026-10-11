@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'New Workout')
+@section('title', 'Latihan Baru')
 
 @section('content')
 <div class="page-header flex-between align-center mb-4">
     <div>
-        <h1 class="mb-1">New Workout</h1>
-        <p class="text-muted text-sm mb-0">Record your exercises, sets, weights and track rest times.</p>
+        <h1 class="mb-1">Latihan Baru</h1>
+        <p class="text-muted text-sm mb-0">Catat gerakan, set, berat dan waktu istirahatmu.</p>
     </div>
     <div class="d-flex align-center flex-gap-sm">
-        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Toggle audio alerts">
-            <span id="audio-icon">🔊</span> <span id="audio-label">Sound Alerts: ON</span>
+        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Aktifkan/matikan suara">
+            <span id="audio-icon">🔊</span> <span id="audio-label">Suara: ON</span>
         </button>
         <div class="workout-stopwatch badge badge-primary" id="workout-stopwatch" style="font-size: 0.95rem; font-weight: 700; padding: 6px 14px; border-radius: 9999px;">
             ⏱️ <span id="stopwatch-display" class="tabular-nums">00:00</span>
@@ -18,20 +18,20 @@
     </div>
 </div>
 
-<!-- Rest Timer Floating Alert Banner (hidden by default) -->
+<!-- Banner Istirahat (tersembunyi secara default) -->
 <div id="rest-timer-banner" class="card mb-4 p-3" style="display: none; border: 1px solid var(--warning); background: var(--warning-light);">
     <div class="flex-between align-center mb-2">
-        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">⏳ REST INTERVAL</span>
+        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">⏳ WAKTU ISTIRAHAT</span>
         <div class="rest-preset-btns d-flex flex-gap-sm">
-            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30">30s</button>
-            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60">60s</button>
-            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="90">90s</button>
-            <button type="button" class="btn btn-small btn-outline" id="cancel-rest-btn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Skip</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30">30d</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60">60d</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="90">90d</button>
+            <button type="button" class="btn btn-small btn-outline" id="cancel-rest-btn" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Lewati</button>
         </div>
     </div>
     <div class="rest-countdown-display text-center my-2">
         <span id="rest-seconds" class="tabular-nums" style="font-size: 2.25rem; font-weight: 800; color: var(--warning); line-height: 1;">60</span>
-        <span class="text-sm text-secondary" style="margin-left: 6px; font-weight: 500;">seconds left</span>
+        <span class="text-sm text-secondary" style="margin-left: 6px; font-weight: 500;">detik lagi</span>
     </div>
     <div class="progress-bar mt-2" style="height: 6px; border-radius: 9999px;">
         <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: var(--warning); border-radius: 9999px;"></div>
@@ -40,71 +40,71 @@
 
 <form action="{{ route('workouts.store') }}" method="POST" id="workout-form">
     @csrf
-    
+
     <div class="card mb-4">
         <div class="card-header">
-            <h3>Workout Details</h3>
+            <h3>Detail Latihan</h3>
         </div>
         <div class="card-body">
             <div class="form-group">
-                <label>Workout Type</label>
+                <label>Tipe Latihan</label>
                 <div class="workout-type-selector">
                     <button type="button" class="btn btn-outline type-btn" data-type="Push">Push</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Pull">Pull</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Legs">Legs</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Full Body">Full Body</button>
-                    <button type="button" class="btn btn-outline type-btn" data-type="Custom">Custom</button>
+                    <button type="button" class="btn btn-outline type-btn" data-type="Custom">Kustom</button>
                 </div>
                 <input type="hidden" name="type" id="workout-type" value="Custom">
             </div>
 
             <div class="form-group">
-                <label for="name">Workout Name</label>
-                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="e.g. Barbell & Dumbbell Routine">
+                <label for="name">Nama Latihan</label>
+                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Dumbbell">
             </div>
 
             <div class="form-row flex-gap">
                 <div class="form-group col flex-1">
-                    <label for="date">Date</label>
+                    <label for="date">Tanggal</label>
                     <input type="date" name="date" id="date" class="form-control" value="{{ date('Y-m-d') }}" required>
                 </div>
                 <div class="form-group col flex-1">
-                    <label for="duration">Duration (mins)</label>
-                    <input type="number" name="duration" id="duration" class="form-control" placeholder="auto-calculated or 45">
+                    <label for="duration">Durasi (menit)</label>
+                    <input type="number" name="duration" id="duration" class="form-control" placeholder="otomatis atau isi manual">
                 </div>
             </div>
-            
+
             <div class="form-group">
-                <label for="notes">Notes</label>
-                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="How did it feel? (optional)"></textarea>
+                <label for="notes">Catatan</label>
+                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Gimana rasanya? (opsional)"></textarea>
             </div>
         </div>
     </div>
 
     <div class="card mb-4">
         <div class="card-header flex-between align-center">
-            <h3>Exercises</h3>
-            <button type="button" class="btn btn-small btn-primary" id="add-exercise-btn">+ Add Exercise</button>
+            <h3>Gerakan</h3>
+            <button type="button" class="btn btn-small btn-primary" id="add-exercise-btn">+ Tambah Gerakan</button>
         </div>
         <div class="card-body">
             <div id="exercises-container">
-                <!-- Initial exercise row -->
+                <!-- Gerakan pertama -->
                 <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="0">
                     <div class="flex-between align-center mb-3">
-                        <h4 class="m-0 exercise-title text-primary">Exercise 1</h4>
-                        <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Remove</button>
+                        <h4 class="m-0 exercise-title text-primary">Gerakan 1</h4>
+                        <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Hapus</button>
                     </div>
 
-                    <!-- Hidden inputs for legacy/fallback sets and reps -->
+                    <!-- Input tersembunyi untuk total set dan reps -->
                     <input type="hidden" name="exercises[0][sets]" class="exercise-total-sets" value="3">
                     <input type="hidden" name="exercises[0][reps]" class="exercise-first-reps" value="10">
 
-                    <!-- Exercise Selection Dropdown & Custom Input -->
+                    <!-- Pilih Gerakan -->
                     <div class="form-group mb-3">
-                        <label>Select Exercise</label>
+                        <label>Pilih Gerakan</label>
                         <select name="exercises[0][exercise_id]" class="form-control exercise-select" required>
-                            <option value="">-- Choose Exercise --</option>
-                            <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Other / Custom Exercise...</option>
+                            <option value="">-- Pilih Gerakan --</option>
+                            <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
                             @if(isset($exercises))
                                 @foreach($exercises as $category => $exList)
                                     <optgroup label="── {{ strtoupper($category) }} ──">
@@ -115,23 +115,23 @@
                                 @endforeach
                             @endif
                         </select>
-                        <!-- Custom Exercise Name Input (Hidden by default unless custom chosen) -->
+                        <!-- Input nama kustom (tersembunyi, muncul jika pilih kustom) -->
                         <div class="custom-name-wrapper mt-2" style="display: none;">
-                            <input type="text" name="exercises[0][custom_name]" class="form-control custom-name-input" placeholder="Enter custom exercise name (e.g. Barbell Row, Hip Thrust)...">
+                            <input type="text" name="exercises[0][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row, Hip Thrust)...">
                         </div>
                     </div>
 
-                    <!-- Multi-Set Table/List -->
+                    <!-- Daftar Set -->
                     <div class="sets-wrapper mb-3">
                         <div class="flex-between align-center mb-2">
-                            <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SETS & PROGRESSION</span>
-                            <button type="button" class="btn btn-small btn-outline add-set-btn">+ Add Set</button>
+                            <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SET & PROGRES</span>
+                            <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
                         </div>
 
-                        <!-- Header Kolom: SET, WEIGHT (KG), REPS, LIVE TIMER -->
+                        <!-- Header kolom: SET, BERAT (KG), REPS, TIMER -->
                         <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
                             <span class="set-col-label">Set</span>
-                            <span class="flex-1">Weight (kg)</span>
+                            <span class="flex-1">Berat (kg)</span>
                             <span class="flex-1">Reps</span>
                             <span class="set-col-timer text-center">Timer</span>
                             <span class="set-col-action"></span>
@@ -148,7 +148,7 @@
                                     <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
                                 <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                    ▶️ Start
+                                    ▶️ Mulai
                                 </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
@@ -163,7 +163,7 @@
                                     <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
                                 <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                    ▶️ Start
+                                    ▶️ Mulai
                                 </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
@@ -178,7 +178,7 @@
                                     <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
                                 <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                    ▶️ Start
+                                    ▶️ Mulai
                                 </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
@@ -186,7 +186,7 @@
                     </div>
 
                     <div class="form-group mb-0">
-                        <input type="text" name="exercises[0][notes]" class="form-control" placeholder="Notes e.g. Felt heavy on set 3 (optional)">
+                        <input type="text" name="exercises[0][notes]" class="form-control" placeholder="Catatan cth. Set 3 terasa berat (opsional)">
                     </div>
                 </div>
             </div>
@@ -194,7 +194,7 @@
     </div>
 
     <div class="form-actions mb-5">
-        <button type="submit" class="btn btn-success btn-block btn-large" style="font-size: 1.1rem; padding: 14px;">✓ Finish Workout</button>
+        <button type="submit" class="btn btn-success btn-block btn-large" style="font-size: 1.1rem; padding: 14px;">✓ Selesai Latihan</button>
     </div>
 </form>
 
@@ -477,7 +477,7 @@
                             this.dataset.status = 'idle';
                             this.classList.remove('btn-success');
                             this.classList.add('btn-outline');
-                            this.textContent = '▶️ Start';
+                            this.textContent = '▶️ Mulai';
                         }
                     });
                 }
@@ -526,7 +526,7 @@
                             <input type="number" name="exercises[${exIdx}][sets_list][${nextSetIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="${lastReps}">
                         </div>
                         <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                            ▶️ Start
+                            ▶️ Mulai
                         </button>
                         <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                     `;
@@ -541,7 +541,7 @@
         function updateExerciseIndices() {
             const rows = container.querySelectorAll('.exercise-row');
             rows.forEach((row, exIdx) => {
-                row.querySelector('.exercise-title').textContent = 'Exercise ' + (exIdx + 1);
+                row.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
                 row.setAttribute('data-exercise-index', exIdx);
 
                 // Update select & custom input names
@@ -576,7 +576,7 @@
             const exIdx = container.querySelectorAll('.exercise-row').length;
             const newExRow = container.firstElementChild.cloneNode(true);
 
-            newExRow.querySelector('.exercise-title').textContent = 'Exercise ' + (exIdx + 1);
+            newExRow.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
             newExRow.setAttribute('data-exercise-index', exIdx);
 
             // Reset inputs
@@ -604,7 +604,7 @@
                         <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
                     <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                        ▶️ Start
+                        ▶️ Mulai
                     </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                 </div>
@@ -617,7 +617,7 @@
                         <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
                     <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                        ▶️ Start
+                        ▶️ Mulai
                     </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                 </div>
@@ -630,7 +630,7 @@
                         <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
                     <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                        ▶️ Start
+                        ▶️ Mulai
                     </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                 </div>
