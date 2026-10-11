@@ -24,26 +24,31 @@ foreach ($directories as $dir) {
     }
 }
 
-// Prepare SQLite database in /tmp
-$srcDb = __DIR__ . '/../database/database.sqlite';
-$tmpDb = '/tmp/database.sqlite';
+// Check database connection mode
+$dbUrl = getenv('DB_URL') ?: ($_ENV['DB_URL'] ?? null);
+$extDb = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? null);
 
-if (!file_exists($tmpDb) || filesize($tmpDb) === 0) {
-    if (file_exists($srcDb) && filesize($srcDb) > 0) {
-        @copy($srcDb, $tmpDb);
-    } else {
-        @touch($tmpDb);
+if (!$dbUrl && (!$extDb || $extDb === 'sqlite')) {
+    // Default to SQLite in /tmp
+    $srcDb = __DIR__ . '/../database/database.sqlite';
+    $tmpDb = '/tmp/database.sqlite';
+
+    if (!file_exists($tmpDb) || filesize($tmpDb) === 0) {
+        if (file_exists($srcDb) && filesize($srcDb) > 0) {
+            @copy($srcDb, $tmpDb);
+        } else {
+            @touch($tmpDb);
+        }
     }
+    @chmod($tmpDb, 0666);
+
+    putenv('DB_CONNECTION=sqlite');
+    $_ENV['DB_CONNECTION'] = 'sqlite';
+    $_SERVER['DB_CONNECTION'] = 'sqlite';
+
+    putenv('DB_DATABASE=' . $tmpDb);
+    $_ENV['DB_DATABASE'] = $tmpDb;
+    $_SERVER['DB_DATABASE'] = $tmpDb;
 }
-@chmod($tmpDb, 0666);
-
-// Set environment variables for SQLite
-putenv('DB_CONNECTION=sqlite');
-$_ENV['DB_CONNECTION'] = 'sqlite';
-$_SERVER['DB_CONNECTION'] = 'sqlite';
-
-putenv('DB_DATABASE=' . $tmpDb);
-$_ENV['DB_DATABASE'] = $tmpDb;
-$_SERVER['DB_DATABASE'] = $tmpDb;
 
 require __DIR__ . '/../public/index.php';

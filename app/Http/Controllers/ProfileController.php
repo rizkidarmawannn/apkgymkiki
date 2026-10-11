@@ -29,19 +29,41 @@ class ProfileController extends Controller
             'height' => 'nullable|numeric|min:50|max:300',
             'weight' => 'nullable|numeric|min:20|max:300',
             'target_weight' => 'nullable|numeric|min:20|max:300',
-            'goal' => 'nullable|in:lose_weight,gain_muscle,maintain',
+            'goal' => 'nullable|string|max:50',
+            'fitness_goal' => 'nullable|string|max:50',
         ]);
 
         $user = Auth::user();
         $user->update(['name' => $request->name]);
 
-        $user->profile->update([
-            'age' => $request->age,
-            'height' => $request->height,
-            'weight' => $request->weight,
-            'target_weight' => $request->target_weight,
-            'goal' => $request->goal,
-        ]);
+        $rawGoal = $request->goal ?? $request->fitness_goal ?? 'maintain';
+        $goalMap = [
+            'lose' => 'lose_weight',
+            'lose_weight' => 'lose_weight',
+            'gain' => 'gain_muscle',
+            'gain_muscle' => 'gain_muscle',
+            'maintain' => 'maintain',
+            'maintain_weight' => 'maintain',
+        ];
+        $goal = $goalMap[$rawGoal] ?? 'maintain';
+
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'age' => $request->age,
+                'height' => $request->height,
+                'weight' => $request->weight,
+                'target_weight' => $request->target_weight,
+                'goal' => $goal,
+            ]
+        );
+
+        if ($request->filled('weight')) {
+            \App\Models\WeightLog::updateOrCreate(
+                ['user_id' => $user->id, 'date' => \Carbon\Carbon::today()],
+                ['weight' => (float)$request->weight]
+            );
+        }
 
         return redirect()->route('profile.index')->with('success', 'Profile updated!');
     }

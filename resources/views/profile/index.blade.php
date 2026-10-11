@@ -20,19 +20,19 @@
         <div class="profile-stats-grid grid-2-col text-left bg-light p-3 rounded-lg mb-4">
             <div class="stat-item">
                 <small class="text-muted d-block">Age</small>
-                <strong>{{ $user->age ?? '-' }} yrs</strong>
+                <strong>{{ $profile->age ?? $user->profile->age ?? '-' }} yrs</strong>
             </div>
             <div class="stat-item">
                 <small class="text-muted d-block">Height</small>
-                <strong>{{ $user->height ?? '-' }} cm</strong>
+                <strong>{{ $profile->height ?? $user->profile->height ?? '-' }} cm</strong>
             </div>
             <div class="stat-item">
                 <small class="text-muted d-block">Current Weight</small>
-                <strong>{{ $user->weight ?? '-' }} kg</strong>
+                <strong>{{ $profile->weight ?? $user->profile->weight ?? '-' }} kg</strong>
             </div>
             <div class="stat-item">
                 <small class="text-muted d-block">Target Weight</small>
-                <strong>{{ $user->target_weight ?? '-' }} kg</strong>
+                <strong>{{ $profile->target_weight ?? $user->profile->target_weight ?? '-' }} kg</strong>
             </div>
         </div>
         
@@ -41,10 +41,14 @@
             @php 
                 $goalMap = [
                     'lose' => 'Lose Weight',
+                    'lose_weight' => 'Lose Weight',
                     'gain' => 'Gain Muscle',
-                    'maintain' => 'Maintain Weight'
+                    'gain_muscle' => 'Gain Muscle',
+                    'maintain' => 'Maintain Weight',
+                    'maintain_weight' => 'Maintain Weight'
                 ];
-                $goalLabel = $goalMap[$user->fitness_goal ?? 'maintain'] ?? 'Maintain Weight';
+                $currentGoal = $profile->goal ?? $user->profile->goal ?? 'maintain';
+                $goalLabel = $goalMap[$currentGoal] ?? 'Maintain Weight';
             @endphp
             <span class="badge badge-primary badge-lg px-3 py-2 text-md">{{ $goalLabel }}</span>
         </div>

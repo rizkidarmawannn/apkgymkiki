@@ -21,31 +21,36 @@
             <div class="form-row">
                 <div class="form-group col">
                     <label>Age</label>
-                    <input type="number" name="age" class="form-control" value="{{ old('age', $user->age ?? '') }}">
+                    <input type="number" name="age" class="form-control" value="{{ old('age', $profile->age ?? $user->profile->age ?? '') }}">
                 </div>
                 <div class="form-group col">
                     <label>Height (cm)</label>
-                    <input type="number" name="height" class="form-control" value="{{ old('height', $user->height ?? '') }}">
+                    <input type="number" name="height" class="form-control" value="{{ old('height', $profile->height ?? $user->profile->height ?? '') }}">
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group col">
                     <label>Current Weight (kg)</label>
-                    <input type="number" step="0.1" name="weight" class="form-control" required value="{{ old('weight', $user->weight ?? '') }}">
+                    <input type="number" step="0.1" name="weight" class="form-control" value="{{ old('weight', $profile->weight ?? $user->profile->weight ?? '') }}">
                 </div>
                 <div class="form-group col">
                     <label>Target Weight (kg)</label>
-                    <input type="number" step="0.1" name="target_weight" class="form-control" required value="{{ old('target_weight', $user->target_weight ?? '') }}">
+                    <input type="number" step="0.1" name="target_weight" class="form-control" value="{{ old('target_weight', $profile->target_weight ?? $user->profile->target_weight ?? '') }}">
                 </div>
             </div>
             
             <div class="form-group">
                 <label>Fitness Goal</label>
-                <select name="fitness_goal" class="form-control" required>
-                    <option value="lose" {{ (old('fitness_goal', $user->fitness_goal ?? '') == 'lose') ? 'selected' : '' }}>Lose Weight</option>
-                    <option value="gain" {{ (old('fitness_goal', $user->fitness_goal ?? '') == 'gain') ? 'selected' : '' }}>Gain Muscle</option>
-                    <option value="maintain" {{ (old('fitness_goal', $user->fitness_goal ?? '') == 'maintain') ? 'selected' : '' }}>Maintain Weight</option>
+                @php
+                    $selectedGoal = old('goal', old('fitness_goal', $profile->goal ?? $user->profile->goal ?? 'maintain'));
+                    if ($selectedGoal === 'lose') $selectedGoal = 'lose_weight';
+                    if ($selectedGoal === 'gain') $selectedGoal = 'gain_muscle';
+                @endphp
+                <select name="goal" class="form-control" required>
+                    <option value="lose_weight" {{ $selectedGoal == 'lose_weight' ? 'selected' : '' }}>Lose Weight</option>
+                    <option value="gain_muscle" {{ $selectedGoal == 'gain_muscle' ? 'selected' : '' }}>Gain Muscle</option>
+                    <option value="maintain" {{ $selectedGoal == 'maintain' ? 'selected' : '' }}>Maintain Weight</option>
                 </select>
             </div>
             

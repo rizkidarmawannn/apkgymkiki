@@ -87,12 +87,16 @@
                         <h4 class="m-0 exercise-title text-primary">Exercise 1</h4>
                         <div class="d-flex align-center flex-gap">
                             <!-- Live Set & Rest Timer Button -->
-                            <button type="button" class="btn btn-small btn-outline set-timer-btn" data-status="idle">
-                                ▶️ Start Set
+                            <button type="button" class="btn btn-small btn-outline set-timer-btn" data-status="idle" data-current-set="1">
+                                ▶️ Start Set 1
                             </button>
                             <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times;</button>
                         </div>
                     </div>
+
+                    <!-- Hidden inputs for legacy/fallback sets and reps -->
+                    <input type="hidden" name="exercises[0][sets]" class="exercise-total-sets" value="3">
+                    <input type="hidden" name="exercises[0][reps]" class="exercise-first-reps" value="10">
 
                     <!-- Exercise Selection Dropdown & Custom Input -->
                     <div class="form-group mb-3">
@@ -121,6 +125,14 @@
                         <div class="flex-between align-center mb-2">
                             <strong class="text-sm text-muted">SETS & REPS DETAILS (Naik / Turun per Set)</strong>
                             <button type="button" class="btn btn-small btn-outline add-set-btn">+ Add Set</button>
+                        </div>
+
+                        <!-- Header Kolom: SET, WEIGHT (KG), REPS -->
+                        <div class="sets-table-header d-flex align-center flex-gap mb-1 px-2 text-xs text-muted" style="font-weight: 700; text-transform: uppercase; font-size: 0.75rem; color: #6B7280;">
+                            <span style="min-width: 50px;">Set</span>
+                            <span class="flex-1">Weight (kg)</span>
+                            <span class="flex-1">Reps</span>
+                            <span style="width: 28px;"></span>
                         </div>
 
                         <div class="sets-list-container">
@@ -300,24 +312,39 @@
             // Set Timer & Rest Trigger
             let setTimer = null;
             let setSecs = 0;
+            let currentSetNum = 1;
 
             if (timerBtn) {
+                timerBtn.dataset.status = 'idle';
+                timerBtn.dataset.currentSet = '1';
+                timerBtn.textContent = '▶️ Start Set 1';
+
                 timerBtn.addEventListener('click', function() {
                     const status = this.dataset.status;
+                    const totalSets = setsContainer.querySelectorAll('.set-item-row').length;
+
                     if (status === 'idle') {
                         this.dataset.status = 'running';
                         this.className = 'btn btn-small btn-warning set-timer-btn';
                         setSecs = 0;
                         const btnText = this;
+                        const activeSet = currentSetNum;
                         setTimer = setInterval(() => {
                             setSecs++;
-                            btnText.textContent = `⏱️ ${setSecs}s (Stop & Rest)`;
+                            btnText.textContent = `⏱️ ${setSecs}s (Stop Set ${activeSet})`;
                         }, 1000);
                     } else if (status === 'running') {
                         clearInterval(setTimer);
                         this.dataset.status = 'idle';
                         this.className = 'btn btn-small btn-outline set-timer-btn';
-                        this.textContent = `▶️ Start Set (${setSecs}s recorded)`;
+                        
+                        if (currentSetNum < totalSets) {
+                            currentSetNum++;
+                            this.dataset.currentSet = currentSetNum;
+                            this.textContent = `▶️ Start Set ${currentSetNum}`;
+                        } else {
+                            this.textContent = `✅ All Sets Done!`;
+                        }
                         startRestTimer(60);
                     }
                 });
@@ -340,6 +367,18 @@
             function updateSetBadges() {
                 const setRows = setsContainer.querySelectorAll('.set-item-row');
                 const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
+                
+                const totalSetsInput = row.querySelector('.exercise-total-sets');
+                const firstRepsInput = row.querySelector('.exercise-first-reps');
+                if (totalSetsInput) {
+                    totalSetsInput.value = setRows.length;
+                    totalSetsInput.setAttribute('name', `exercises[${exIdx}][sets]`);
+                }
+                if (firstRepsInput) {
+                    firstRepsInput.value = setRows[0]?.querySelector('.set-reps-input')?.value || 10;
+                    firstRepsInput.setAttribute('name', `exercises[${exIdx}][reps]`);
+                }
+
                 setRows.forEach((sRow, sIdx) => {
                     sRow.querySelector('.set-badge').textContent = `Set ${sIdx + 1}`;
                     sRow.setAttribute('data-set-index', sIdx);
@@ -431,6 +470,11 @@
                 const notesInput = row.querySelector('input[name*="[notes]"]');
                 if (notesInput) notesInput.setAttribute('name', `exercises[${exIdx}][notes]`);
 
+                const totalSetsInput = row.querySelector('.exercise-total-sets');
+                const firstRepsInput = row.querySelector('.exercise-first-reps');
+                if (totalSetsInput) totalSetsInput.setAttribute('name', `exercises[${exIdx}][sets]`);
+                if (firstRepsInput) firstRepsInput.setAttribute('name', `exercises[${exIdx}][reps]`);
+
                 // Update set inputs
                 const setRows = row.querySelectorAll('.set-item-row');
                 setRows.forEach((sRow, sIdx) => {
@@ -469,8 +513,9 @@
             const timerBtn = newExRow.querySelector('.set-timer-btn');
             if (timerBtn) {
                 timerBtn.dataset.status = 'idle';
+                timerBtn.dataset.currentSet = '1';
                 timerBtn.className = 'btn btn-small btn-outline set-timer-btn';
-                timerBtn.textContent = '▶️ Start Set';
+                timerBtn.textContent = '▶️ Start Set 1';
             }
 
             // Reset sets to 3 blank rows

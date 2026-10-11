@@ -35,8 +35,9 @@ class WorkoutController extends Controller
             'exercises.*.exercise_id' => 'required',
             'exercises.*.custom_name' => 'nullable|string|max:255',
             'exercises.*.weight' => 'nullable|numeric|min:0',
-            'exercises.*.sets' => 'required|integer|min:1',
-            'exercises.*.reps' => 'required|integer|min:1',
+            'exercises.*.sets' => 'nullable|integer|min:1',
+            'exercises.*.reps' => 'nullable|integer|min:1',
+            'exercises.*.sets_list' => 'nullable|array',
             'exercises.*.notes' => 'nullable|string|max:500',
         ]);
 
@@ -74,7 +75,7 @@ class WorkoutController extends Controller
 
             $maxWeight = !empty($setsData) ? max(array_column($setsData, 'weight')) : ($ex['weight'] ?? 0);
             $totalSets = !empty($setsData) ? count($setsData) : ($ex['sets'] ?? 1);
-            $firstReps = !empty($setsData) ? $setsData[0]['reps'] : ($ex['reps'] ?? 0);
+            $firstReps = !empty($setsData) ? ($setsData[0]['reps'] ?? 10) : ($ex['reps'] ?? 10);
 
             WorkoutExercise::create([
                 'workout_id' => $workout->id,
