@@ -92,13 +92,7 @@
                 <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="0">
                     <div class="flex-between align-center mb-3">
                         <h4 class="m-0 exercise-title text-primary">Exercise 1</h4>
-                        <div class="d-flex align-center flex-gap">
-                            <!-- Live Set & Rest Timer Button -->
-                            <button type="button" class="btn btn-small btn-outline set-timer-btn" data-status="idle" data-current-set="1">
-                                ▶️ Start Set 1
-                            </button>
-                            <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times;</button>
-                        </div>
+                        <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Remove</button>
                     </div>
 
                     <!-- Hidden inputs for legacy/fallback sets and reps -->
@@ -134,48 +128,58 @@
                             <button type="button" class="btn btn-small btn-outline add-set-btn">+ Add Set</button>
                         </div>
 
-                        <!-- Header Kolom: SET, WEIGHT (KG), REPS -->
-                        <div class="sets-table-header d-flex align-center flex-gap mb-1 px-2 text-xs text-muted" style="font-weight: 700; text-transform: uppercase; font-size: 0.75rem; color: #6B7280;">
-                            <span style="min-width: 50px;">Set</span>
+                        <!-- Header Kolom: SET, WEIGHT (KG), REPS, LIVE TIMER -->
+                        <div class="sets-table-header d-flex align-center flex-gap mb-1 px-2 text-xs text-muted" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem;">
+                            <span style="min-width: 48px;">Set</span>
                             <span class="flex-1">Weight (kg)</span>
                             <span class="flex-1">Reps</span>
+                            <span style="min-width: 76px; text-align: center;">Live Set</span>
                             <span style="width: 28px;"></span>
                         </div>
 
                         <div class="sets-list-container">
                             <!-- Set 1 -->
                             <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="0">
-                                <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set 1</span>
+                                <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 1</span>
                                 <div class="flex-1">
                                     <input type="number" step="0.5" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
                                 </div>
                                 <div class="flex-1">
                                     <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
                                 </div>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                                    ▶️ Start
+                                </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                             </div>
 
                             <!-- Set 2 -->
                             <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="1">
-                                <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set 2</span>
+                                <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 2</span>
                                 <div class="flex-1">
                                     <input type="number" step="0.5" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
                                 </div>
                                 <div class="flex-1">
                                     <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
                                 </div>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                                    ▶️ Start
+                                </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                             </div>
 
                             <!-- Set 3 -->
                             <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="2">
-                                <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set 3</span>
+                                <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 3</span>
                                 <div class="flex-1">
                                     <input type="number" step="0.5" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
                                 </div>
                                 <div class="flex-1">
                                     <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
                                 </div>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                                    ▶️ Start
+                                </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                             </div>
                         </div>
@@ -371,7 +375,6 @@
             const select = row.querySelector('.exercise-select');
             const customWrapper = row.querySelector('.custom-name-wrapper');
             const customInput = row.querySelector('.custom-name-input');
-            const timerBtn = row.querySelector('.set-timer-btn');
             const setsContainer = row.querySelector('.sets-list-container');
             const addSetBtn = row.querySelector('.add-set-btn');
 
@@ -385,48 +388,6 @@
                     if (customInput) customInput.required = false;
                 }
             });
-
-            // Set Timer & Rest Trigger
-            let setTimer = null;
-            let setSecs = 0;
-            let currentSetNum = 1;
-
-            if (timerBtn) {
-                timerBtn.dataset.status = 'idle';
-                timerBtn.dataset.currentSet = '1';
-                timerBtn.textContent = '▶️ Start Set 1';
-
-                timerBtn.addEventListener('click', function() {
-                    const status = this.dataset.status;
-                    const totalSets = setsContainer.querySelectorAll('.set-item-row').length;
-
-                    if (status === 'idle') {
-                        GymAudio.playStartSound();
-                        this.dataset.status = 'running';
-                        this.className = 'btn btn-small btn-warning set-timer-btn';
-                        setSecs = 0;
-                        const btnText = this;
-                        const activeSet = currentSetNum;
-                        setTimer = setInterval(() => {
-                            setSecs++;
-                            btnText.textContent = `⏱️ ${setSecs}s (Stop Set ${activeSet})`;
-                        }, 1000);
-                    } else if (status === 'running') {
-                        clearInterval(setTimer);
-                        this.dataset.status = 'idle';
-                        this.className = 'btn btn-small btn-outline set-timer-btn';
-                        
-                        if (currentSetNum < totalSets) {
-                            currentSetNum++;
-                            this.dataset.currentSet = currentSetNum;
-                            this.textContent = `▶️ Start Set ${currentSetNum}`;
-                        } else {
-                            this.textContent = `✅ All Sets Done!`;
-                        }
-                        startRestTimer(60);
-                    }
-                });
-            }
 
             // Remove Exercise Row
             const removeBtn = row.querySelector('.remove-exercise-btn');
@@ -481,6 +442,45 @@
                         }
                     });
                 }
+
+                // Individual Live Set Timer
+                const setTimerBtn = sRow.querySelector('.set-row-timer-btn');
+                if (setTimerBtn) {
+                    let setRowInterval = null;
+                    let setRowSecs = 0;
+
+                    setTimerBtn.addEventListener('click', function() {
+                        const status = this.dataset.status || 'idle';
+                        if (status === 'idle') {
+                            GymAudio.playStartSound();
+                            this.dataset.status = 'running';
+                            this.classList.remove('btn-outline');
+                            this.classList.add('btn-warning');
+                            setRowSecs = 0;
+                            this.textContent = '⏱️ 0s';
+
+                            setRowInterval = setInterval(() => {
+                                setRowSecs++;
+                                this.textContent = `⏱️ ${setRowSecs}s`;
+                            }, 1000);
+                        } else if (status === 'running') {
+                            clearInterval(setRowInterval);
+                            this.dataset.status = 'done';
+                            this.classList.remove('btn-warning');
+                            this.classList.add('btn-success');
+                            this.textContent = `✓ ${setRowSecs}s`;
+                            
+                            // Immediately start 60s rest countdown with victory audio alert!
+                            startRestTimer(60);
+                        } else if (status === 'done') {
+                            // Click again resets to idle if needed
+                            this.dataset.status = 'idle';
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-outline');
+                            this.textContent = '▶️ Start';
+                        }
+                    });
+                }
             }
 
             // Attach to initial set rows
@@ -518,18 +518,22 @@
                     const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
 
                     newSetRow.innerHTML = `
-                        <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set ${nextSetIdx + 1}</span>
+                        <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set ${nextSetIdx + 1}</span>
                         <div class="flex-1">
                             <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][${nextSetIdx}][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required value="${lastWeight}">
                         </div>
                         <div class="flex-1">
                             <input type="number" name="exercises[${exIdx}][sets_list][${nextSetIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="${lastReps}">
                         </div>
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                            ▶️ Start
+                        </button>
                         <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                     `;
 
                     setupSetRowEvents(newSetRow);
                     setsContainer.appendChild(newSetRow);
+                    updateSetBadges();
                 });
             }
         }
@@ -588,45 +592,46 @@
             const notesInput = newExRow.querySelector('input[name*="[notes]"]');
             if (notesInput) notesInput.value = '';
 
-            const timerBtn = newExRow.querySelector('.set-timer-btn');
-            if (timerBtn) {
-                timerBtn.dataset.status = 'idle';
-                timerBtn.dataset.currentSet = '1';
-                timerBtn.className = 'btn btn-small btn-outline set-timer-btn';
-                timerBtn.textContent = '▶️ Start Set 1';
-            }
-
-            // Reset sets to 3 blank rows
+            // Reset sets to 3 blank rows with set-row-timer-btn
             const setsContainer = newExRow.querySelector('.sets-list-container');
             setsContainer.innerHTML = `
                 <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="0">
-                    <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set 1</span>
+                    <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 1</span>
                     <div class="flex-1">
                         <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
                     </div>
                     <div class="flex-1">
                         <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
                     </div>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                        ▶️ Start
+                    </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                 </div>
                 <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="1">
-                    <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set 2</span>
+                    <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 2</span>
                     <div class="flex-1">
                         <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
                     </div>
                     <div class="flex-1">
                         <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
                     </div>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                        ▶️ Start
+                    </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                 </div>
                 <div class="set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded" data-set-index="2">
-                    <span class="badge badge-secondary set-badge" style="min-width: 50px;">Set 3</span>
+                    <span class="badge badge-secondary set-badge" style="min-width: 48px;">Set 3</span>
                     <div class="flex-1">
                         <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="Weight (kg)" required>
                     </div>
                     <div class="flex-1">
                         <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="Reps" required value="10">
                     </div>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="min-width: 76px; padding: 4px 8px;">
+                        ▶️ Start
+                    </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn" style="padding: 2px 8px;">&times;</button>
                 </div>
             `;

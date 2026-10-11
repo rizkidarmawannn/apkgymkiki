@@ -8,6 +8,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('gymtracker-theme') || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     @stack('styles')
 </head>
 <body>
@@ -32,10 +39,15 @@
                     <span class="nav-icon">👤</span> Profile
                 </a>
             </div>
-            <form method="POST" action="{{ route('logout') }}" class="nav-logout">
-                @csrf
-                <button type="submit" class="btn-logout">Logout</button>
-            </form>
+            <div class="d-flex align-center flex-gap-sm">
+                <button type="button" class="btn-theme-toggle theme-toggle-btn" title="Toggle Dark/Light Mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <form method="POST" action="{{ route('logout') }}" class="nav-logout m-0">
+                    @csrf
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
+            </div>
         </div>
     </nav>
 
@@ -76,8 +88,33 @@
             <span class="bottom-nav-icon">👤</span>
             <span class="bottom-nav-label">Profile</span>
         </a>
+        <button type="button" class="bottom-nav-item theme-toggle-btn" style="background: none; border: none; cursor: pointer;">
+            <span class="bottom-nav-icon theme-icon">🌙</span>
+            <span class="bottom-nav-label">Theme</span>
+        </button>
     </nav>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            updateThemeIcons(currentTheme);
+
+            document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const activeTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', activeTheme);
+                    localStorage.setItem('gymtracker-theme', activeTheme);
+                    updateThemeIcons(activeTheme);
+                });
+            });
+
+            function updateThemeIcons(theme) {
+                document.querySelectorAll('.theme-icon').forEach(icon => {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                });
+            }
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>
