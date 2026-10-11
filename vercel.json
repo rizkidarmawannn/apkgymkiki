@@ -24,6 +24,7 @@
             "dest": "/api/index.php"
         }
     ],
+    "regions": ["sin1"],
     "env": {
         "APP_NAME": "GymTracker",
         "APP_ENV": "production",
@@ -40,6 +41,6 @@
         "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr",
         "DB_CONNECTION": "pgsql",
-        "DB_URL": "postgresql://neondb_owner:npg_BriJg0Dhe3pw@ep-wispy-violet-b33wpdf6.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+        "DB_URL": "postgresql://neondb_owner:npg_BriJg0Dhe3pw@ep-wispy-violet-b33wpdf6-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
     }
 }
