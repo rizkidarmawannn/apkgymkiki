@@ -1,1 +1,2 @@
-*.sqlite*
+# Database sqlite tracked for serverless deployment
+!database.sqlite
