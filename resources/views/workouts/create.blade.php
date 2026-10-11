@@ -19,22 +19,22 @@
 </div>
 
 <!-- Rest Timer Floating Alert Banner (hidden by default) -->
-<div id="rest-timer-banner" class="card mb-4 p-4 text-white" style="display: none; background: linear-gradient(135deg, #1E293B, #0F172A); border: 2px solid #F59E0B; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25);">
+<div id="rest-timer-banner" class="card mb-4 p-3 bg-white" style="display: none; border: 1px solid #FDE68A; background: #FFFDF5; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);">
     <div class="flex-between align-center mb-2">
-        <strong style="font-size: 1.05rem; letter-spacing: 0.05em; color: #FBBF24;">⏳ REST TIMER (Istirahat Antar Set)</strong>
+        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.8rem; padding: 4px 10px;">⏳ ISTIRAHAT ANTAR SET</span>
         <div class="rest-preset-btns d-flex flex-gap-sm">
-            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30" style="color:#F1F5F9; border-color: rgba(255,255,255,0.2);">30s</button>
-            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60" style="color:#F1F5F9; border-color: rgba(255,255,255,0.2);">60s</button>
-            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="90" style="color:#F1F5F9; border-color: rgba(255,255,255,0.2);">90s</button>
-            <button type="button" class="btn btn-small btn-danger" id="cancel-rest-btn">Skip</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30">30s</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60">60s</button>
+            <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="90">90s</button>
+            <button type="button" class="btn btn-small btn-outline" id="cancel-rest-btn" style="color: var(--danger); border-color: #FECACA;">Skip</button>
         </div>
     </div>
-    <div class="rest-countdown-display text-center my-3">
-        <span id="rest-seconds" class="tabular-nums" style="font-size: 3rem; font-weight: 800; color: #F59E0B; text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);">60</span>
-        <span style="font-size: 1.1rem; color: #94A3B8; margin-left: 8px;">detik tersisa</span>
+    <div class="rest-countdown-display text-center my-2">
+        <span id="rest-seconds" class="tabular-nums" style="font-size: 2.5rem; font-weight: 800; color: #D97706; line-height: 1;">60</span>
+        <span style="font-size: 0.95rem; color: #78350F; margin-left: 6px; font-weight: 500;">detik tersisa</span>
     </div>
-    <div class="progress-bar mt-2" style="background: rgba(255,255,255,0.12); height: 10px; border-radius: 9999px;">
-        <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: linear-gradient(90deg, #F59E0B, #EF4444); border-radius: 9999px;"></div>
+    <div class="progress-bar mt-2" style="background: #FEF3C7; height: 6px; border-radius: 9999px;">
+        <div id="rest-progress-fill" class="progress-fill" style="width: 100%; background: #F59E0B; border-radius: 9999px;"></div>
     </div>
 </div>
 
