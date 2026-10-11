@@ -7,7 +7,7 @@
     <title>GymTracker — @yield('title', 'Beranda')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ time() }}">
     <script>
         (function() {
             const savedTheme = localStorage.getItem('gymtracker-theme') ||
