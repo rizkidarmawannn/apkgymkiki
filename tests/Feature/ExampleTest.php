@@ -67,4 +67,33 @@ class ExampleTest extends TestCase
         $this->assertEquals(60, $user->fresh()->profile->weight);
         $this->assertEquals('gain_muscle', $user->fresh()->profile->goal);
     }
+
+    public function test_user_can_view_progress_page(): void
+    {
+        $user = \App\Models\User::first() ?? \App\Models\User::factory()->create();
+
+        // Create a workout with workout exercise to trigger the exerciseProgress loop
+        $workout = \App\Models\Workout::create([
+            'user_id' => $user->id,
+            'name' => 'Chest Day',
+            'date' => '2026-10-11',
+            'status' => 'completed',
+        ]);
+
+        $exercise = \App\Models\Exercise::firstOrCreate(
+            ['name' => 'Bench Press'],
+            ['category' => 'Chest', 'muscle' => 'Pectorals']
+        );
+
+        \App\Models\WorkoutExercise::create([
+            'workout_id' => $workout->id,
+            'exercise_id' => $exercise->id,
+            'weight' => 70,
+            'sets' => 3,
+            'reps' => 10,
+        ]);
+
+        $response = $this->actingAs($user)->get('/progress');
+        $response->assertStatus(200);
+    }
 }

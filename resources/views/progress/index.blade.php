@@ -49,7 +49,7 @@
             <small class="text-white-50 d-block">Change</small>
             @php 
                 $change = ($currentWeight ?? 0) - ($startingWeight ?? 0); 
-                $goal = $profile->goal ?? 'lose_weight';
+                $goal = $profile?->goal ?? $user->profile?->goal ?? 'lose_weight';
                 $isGood = (str_contains($goal, 'lose') && $change <= 0) || (str_contains($goal, 'gain') && $change >= 0);
             @endphp
             <strong class="text-2xl d-flex align-center justify-content-center flex-gap">
@@ -102,14 +102,20 @@
     <div class="card-body p-0">
         <ul class="list-group list-group-flush">
             @forelse($exerciseProgress ?? [] as $ep)
+                @php
+                    $epObj = is_array($ep) ? (object)$ep : $ep;
+                    $exName = $epObj->exercise_name ?? ($epObj->exercise->name ?? 'Exercise');
+                    $curWeight = (float)($epObj->current_weight ?? 0);
+                    $prevWeight = (float)($epObj->previous_weight ?? 0);
+                    $diff = $curWeight - $prevWeight;
+                @endphp
                 <li class="list-group-item d-flex justify-content-between align-center p-3">
                     <div>
-                        <strong>{{ $ep->exercise_name }}</strong>
-                        <small class="d-block text-muted">Prev: {{ $ep->previous_weight }} kg</small>
+                        <strong>{{ $exName }}</strong>
+                        <small class="d-block text-muted">Prev: {{ $prevWeight }} kg</small>
                     </div>
                     <div class="text-right">
-                        <strong>{{ $ep->current_weight }} kg</strong>
-                        @php $diff = $ep->current_weight - $ep->previous_weight; @endphp
+                        <strong>{{ $curWeight }} kg</strong>
                         <small class="d-block {{ $diff >= 0 ? 'text-success' : 'text-danger' }}">
                             {{ $diff > 0 ? '+' : '' }}{{ $diff }} kg
                         </small>

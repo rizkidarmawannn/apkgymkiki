@@ -76,13 +76,21 @@ class ProgressController extends Controller
                 $current = $records->first();
                 $previous = $records->count() > 1 ? $records->last() : null;
                 
-                return [
+                $name = $item->exercise?->name ?? 'Exercise';
+                $curWeight = (float)($current?->weight ?? 0);
+                $curReps = (int)($current?->reps ?? 0);
+                $prevWeight = (float)($previous?->weight ?? 0);
+                $prevReps = (int)($previous?->reps ?? 0);
+                $diff = $previous ? round($curWeight - $prevWeight, 1) : 0;
+
+                return (object)[
                     'exercise' => $item->exercise,
-                    'current_weight' => $current?->weight ?? 0,
-                    'current_reps' => $current?->reps ?? 0,
-                    'previous_weight' => $previous?->weight ?? 0,
-                    'previous_reps' => $previous?->reps ?? 0,
-                    'progress' => $current && $previous ? round($current->weight - $previous->weight, 1) : 0,
+                    'exercise_name' => $name,
+                    'current_weight' => $curWeight,
+                    'current_reps' => $curReps,
+                    'previous_weight' => $prevWeight,
+                    'previous_reps' => $prevReps,
+                    'progress' => $diff,
                 ];
             });
 
