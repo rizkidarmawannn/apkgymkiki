@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FoodLogController;
 use App\Http\Controllers\ProfileController;
@@ -29,8 +30,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/workouts', [WorkoutController::class, 'index'])->name('workouts.index');
     Route::get('/workouts/create', [WorkoutController::class, 'create'])->name('workouts.create');
     Route::post('/workouts', [WorkoutController::class, 'store'])->name('workouts.store');
+    Route::post('/workouts/autosave', [WorkoutController::class, 'autosave'])->name('workouts.autosave');
+    Route::get('/workouts/calendar-data', [WorkoutController::class, 'calendarData'])->name('workouts.calendarData');
+    Route::get('/workouts/{workout}/resume', [WorkoutController::class, 'resume'])->name('workouts.resume');
+    Route::delete('/workouts/{workout}/cancel', [WorkoutController::class, 'cancel'])->name('workouts.cancel');
     Route::get('/workouts/{workout}', [WorkoutController::class, 'show'])->name('workouts.show');
     Route::delete('/workouts/{workout}', [WorkoutController::class, 'destroy'])->name('workouts.destroy');
+
+    // Calendar (Hevy style consistency matrix & monthly view)
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/calendar/data', [CalendarController::class, 'calendarData'])->name('calendar.data');
 
     // Food
     Route::get('/foods', [FoodLogController::class, 'index'])->name('foods.index');

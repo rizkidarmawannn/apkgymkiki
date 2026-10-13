@@ -110,13 +110,24 @@ class ProgressController extends Controller
     {
         $request->validate([
             'weight' => 'required|numeric|min:20|max:300',
-            'date' => 'required|date',
+            'date' => 'required|string',
         ]);
+
+        $dateStr = trim($request->date);
+        try {
+            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $dateStr, $matches)) {
+                $parsedDate = sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
+            } else {
+                $parsedDate = Carbon::parse($dateStr)->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            $parsedDate = Carbon::today()->format('Y-m-d');
+        }
 
         WeightLog::updateOrCreate(
             [
                 'user_id' => Auth::id(),
-                'date' => $request->date,
+                'date' => $parsedDate,
             ],
             [
                 'weight' => $request->weight,
@@ -129,7 +140,7 @@ class ProgressController extends Controller
             $profile->update(['weight' => $request->weight]);
         }
 
-        return redirect()->route('progress.index')->with('success', 'Weight saved!');
+        return redirect()->route('progress.index')->with('success', 'Berat badan berhasil disimpan!');
     }
 
     public function weightData(Request $request)

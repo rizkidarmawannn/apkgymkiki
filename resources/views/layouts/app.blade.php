@@ -37,6 +37,9 @@
                 <a href="{{ route('workouts.index') }}" class="nav-link {{ request()->routeIs('workouts.*') ? 'active' : '' }}">
                     <span class="nav-icon">🏋️</span> <span data-i18n="nav_workout">Latihan</span>
                 </a>
+                <a href="{{ route('calendar.index') }}" class="nav-link {{ request()->routeIs('calendar.*') ? 'active' : '' }}">
+                    <span class="nav-icon">📅</span> <span data-i18n="nav_calendar">Kalender</span>
+                </a>
                 <a href="{{ route('foods.index') }}" class="nav-link {{ request()->routeIs('foods.*') ? 'active' : '' }}">
                     <span class="nav-icon">🍽️</span> <span data-i18n="nav_food">Makanan</span>
                 </a>
@@ -62,8 +65,28 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        @if(isset($activeWorkout) && $activeWorkout && !request()->routeIs('workouts.create') && !request()->routeIs('workouts.resume'))
+            <div class="ongoing-workout-floating-banner">
+                <div class="ongoing-banner-content">
+                    <span class="ongoing-pulse-dot"></span>
+                    <div>
+                        <strong class="d-block" style="font-size: 0.95rem;">⚡ Sesi Latihan Sedang Berjalan: {{ $activeWorkout->name }}</strong>
+                        <small class="text-muted">{{ $activeWorkout->workoutExercises->count() }} gerakan dicatat &bull; Progres otomatis tersimpan</small>
+                    </div>
+                </div>
+                <div class="ongoing-banner-action">
+                    <a href="{{ route('workouts.resume', $activeWorkout) }}" class="btn btn-warning btn-small" style="font-weight: 700; border-radius: 9999px;">
+                        ▶️ Lanjutkan Latihan
+                    </a>
+                </div>
+            </div>
+        @endif
+
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-error">{{ session('error') }}</div>
         @endif
         @if($errors->any())
             <div class="alert alert-error">
@@ -84,6 +107,10 @@
         <a href="{{ route('workouts.index') }}" class="bottom-nav-item {{ request()->routeIs('workouts.*') ? 'active' : '' }}">
             <span class="bottom-nav-icon">🏋️</span>
             <span class="bottom-nav-label" data-i18n="nav_workout">Latihan</span>
+        </a>
+        <a href="{{ route('calendar.index') }}" class="bottom-nav-item {{ request()->routeIs('calendar.*') ? 'active' : '' }}">
+            <span class="bottom-nav-icon">📅</span>
+            <span class="bottom-nav-label" data-i18n="nav_calendar">Kalender</span>
         </a>
         <a href="{{ route('foods.index') }}" class="bottom-nav-item {{ request()->routeIs('foods.*') ? 'active' : '' }}">
             <span class="bottom-nav-icon">🍽️</span>
@@ -180,6 +207,7 @@
             id: {
                 nav_home: "Beranda",
                 nav_workout: "Latihan",
+                nav_calendar: "Kalender",
                 nav_food: "Makanan",
                 nav_progress: "Progres",
                 nav_profile: "Profil",
@@ -195,6 +223,7 @@
             en: {
                 nav_home: "Home",
                 nav_workout: "Workout",
+                nav_calendar: "Calendar",
                 nav_food: "Food",
                 nav_progress: "Progress",
                 nav_profile: "Profile",

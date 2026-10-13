@@ -14,9 +14,20 @@ class Workout extends Model
         'name',
         'date',
         'duration',
+        'duration_seconds',
         'notes',
         'status',
     ];
+
+    public function scopeInProgress(Builder $query): Builder
+    {
+        return $query->where('status', 'in_progress');
+    }
+
+    public function scopeCompleted(Builder $query): Builder
+    {
+        return $query->where('status', 'completed');
+    }
 
     protected function casts(): array
     {

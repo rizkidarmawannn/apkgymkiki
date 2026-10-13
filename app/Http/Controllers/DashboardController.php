@@ -37,10 +37,18 @@ class DashboardController extends Controller
         // Target weight
         $targetWeight = $profile?->target_weight ?? 0;
 
-        // Today's workout
+        // Active ongoing workout (if any)
+        $ongoingWorkout = Workout::where('user_id', $user->id)
+            ->where('status', 'in_progress')
+            ->with('workoutExercises.exercise')
+            ->latest('id')
+            ->first();
+
+        // Today's workout (prefer completed if ongoing exists separately, or latest)
         $todayWorkout = Workout::where('user_id', $user->id)
             ->whereDate('date', $today)
             ->with('workoutExercises.exercise')
+            ->latest('id')
             ->first();
 
         // Today's food logs grouped by meal
@@ -57,7 +65,7 @@ class DashboardController extends Controller
 
         return view('dashboard.index', compact(
             'user', 'currentWeight', 'todayCalories', 'workoutsThisWeek',
-            'targetWeight', 'todayWorkout', 'todayFoods', 'calorieTarget'
+            'targetWeight', 'todayWorkout', 'ongoingWorkout', 'todayFoods', 'calorieTarget'
         ));
     }
 }

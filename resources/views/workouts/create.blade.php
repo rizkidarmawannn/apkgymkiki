@@ -1,14 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Latihan Baru')
+@section('title', isset($activeWorkout) ? 'Latihan Sedang Berjalan' : 'Latihan Baru')
 
 @section('content')
 <div class="page-header flex-between align-center mb-4">
     <div>
-        <h1 class="mb-1">Latihan Baru</h1>
-        <p class="text-muted text-sm mb-0">Catat gerakan, set, berat dan waktu istirahatmu.</p>
+        <h1 class="mb-1">{{ isset($activeWorkout) ? 'Latihan Sedang Berjalan' : 'Latihan Baru' }}</h1>
+        <p class="text-muted text-sm mb-0">Catat gerakan, set, berat dan waktu istirahatmu. Progres tersimpan otomatis.</p>
     </div>
     <div class="d-flex align-center flex-gap-sm">
+        <span id="autosave-status" class="badge badge-secondary" style="font-size: 0.75rem; font-weight: 600; padding: 6px 10px;">
+            ☁️ Tersimpan otomatis
+        </span>
         <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Aktifkan/matikan suara">
             <span id="audio-icon">🔊</span> <span id="audio-label">Suara: ON</span>
         </button>
@@ -17,6 +20,16 @@
         </div>
     </div>
 </div>
+
+@if(isset($activeWorkout) && $activeWorkout)
+    <div class="alert alert-warning mb-4 flex-between align-center" style="border: 1.5px solid var(--warning); background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04));">
+        <div>
+            <strong style="color: var(--text-primary);">⚡ Melanjutkan Sesi: {{ $activeWorkout->name }}</strong>
+            <div class="text-sm text-secondary">Progres dan waktu latihanmu otomatis disimpan. Klik "Selesai Latihan & Simpan" setelah seluruh latihan selesai.</div>
+        </div>
+        <a href="{{ route('workouts.create', ['new' => 1]) }}" class="btn btn-small btn-outline ml-3" style="white-space: nowrap;" onclick="return confirm('Mulai sesi latihan baru dari awal?');">Mulai Baru</a>
+    </div>
+@endif
 
 <!-- Banner Istirahat (tersembunyi secara default) -->
 <div id="rest-timer-banner" class="card mb-4 p-3" style="display: none; border: 1px solid var(--warning); background: var(--warning-light);">
@@ -40,6 +53,8 @@
 
 <form action="{{ route('workouts.store') }}" method="POST" id="workout-form">
     @csrf
+    <input type="hidden" name="workout_id" id="workout-id" value="{{ $activeWorkout->id ?? '' }}">
+    <input type="hidden" name="duration_seconds" id="duration-seconds" value="{{ $activeWorkout->duration_seconds ?? ($activeWorkout && $activeWorkout->duration ? $activeWorkout->duration * 60 : 0) }}">
 
     <div class="card mb-4">
         <div class="card-header">
@@ -53,30 +68,30 @@
                     <button type="button" class="btn btn-outline type-btn" data-type="Pull">Pull</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Legs">Legs</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Full Body">Full Body</button>
-                    <button type="button" class="btn btn-outline type-btn" data-type="Custom">Kustom</button>
+                    <button type="button" class="btn btn-outline type-btn active" data-type="Custom">Kustom</button>
                 </div>
                 <input type="hidden" name="type" id="workout-type" value="Custom">
             </div>
 
             <div class="form-group">
-                <label for="name">Nama Latihan</label>
-                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Dumbbell">
+                <label for="workout-name">Nama Latihan</label>
+                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Dumbbell" value="{{ $activeWorkout->name ?? '' }}">
             </div>
 
             <div class="form-row flex-gap">
                 <div class="form-group col flex-1">
                     <label for="date">Tanggal</label>
-                    <input type="date" name="date" id="date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    <input type="date" name="date" id="date" class="form-control" value="{{ isset($activeWorkout->date) ? \Carbon\Carbon::parse($activeWorkout->date)->format('Y-m-d') : ($selectedDate ?? date('Y-m-d')) }}" required>
                 </div>
                 <div class="form-group col flex-1">
                     <label for="duration">Durasi (menit)</label>
-                    <input type="number" name="duration" id="duration" class="form-control" placeholder="otomatis atau isi manual">
+                    <input type="number" name="duration" id="duration" class="form-control" placeholder="otomatis atau isi manual" value="{{ $activeWorkout->duration ?? '' }}">
                 </div>
             </div>
 
             <div class="form-group">
                 <label for="notes">Catatan</label>
-                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Gimana rasanya? (opsional)"></textarea>
+                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Gimana rasanya? (opsional)">{{ $activeWorkout->notes ?? '' }}</textarea>
             </div>
         </div>
     </div>
@@ -88,113 +103,198 @@
         </div>
         <div class="card-body">
             <div id="exercises-container">
-                <!-- Gerakan pertama -->
-                <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="0">
-                    <div class="flex-between align-center mb-3">
-                        <h4 class="m-0 exercise-title text-primary">Gerakan 1</h4>
-                        <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Hapus</button>
-                    </div>
+                @php
+                    $exercisesList = (isset($activeWorkout) && $activeWorkout->workoutExercises->count() > 0) 
+                        ? $activeWorkout->workoutExercises 
+                        : null;
+                @endphp
 
-                    <!-- Input tersembunyi untuk total set dan reps -->
-                    <input type="hidden" name="exercises[0][sets]" class="exercise-total-sets" value="3">
-                    <input type="hidden" name="exercises[0][reps]" class="exercise-first-reps" value="10">
+                @if($exercisesList)
+                    @foreach($exercisesList as $exIdx => $we)
+                        <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="{{ $exIdx }}">
+                            <div class="flex-between align-center mb-3">
+                                <h4 class="m-0 exercise-title text-primary">Gerakan {{ $exIdx + 1 }}</h4>
+                                <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Hapus</button>
+                            </div>
 
-                    <!-- Pilih Gerakan -->
-                    <div class="form-group mb-3">
-                        <label>Pilih Gerakan</label>
-                        <select name="exercises[0][exercise_id]" class="form-control exercise-select" required>
-                            <option value="">-- Pilih Gerakan --</option>
-                            <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
-                            @if(isset($exercises))
-                                @foreach($exercises as $category => $exList)
-                                    <optgroup label="── {{ strtoupper($category) }} ──">
-                                        @foreach($exList as $ex)
-                                            <option value="{{ $ex->id }}">{{ $ex->name }} ({{ $ex->muscle }})</option>
+                            <input type="hidden" name="exercises[{{ $exIdx }}][sets]" class="exercise-total-sets" value="{{ $we->sets ?? 1 }}">
+                            <input type="hidden" name="exercises[{{ $exIdx }}][reps]" class="exercise-first-reps" value="{{ $we->reps ?? 10 }}">
+
+                            <div class="form-group mb-3">
+                                <label>Pilih Gerakan</label>
+                                <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select" required>
+                                    <option value="">-- Pilih Gerakan --</option>
+                                    <option value="custom" {{ ($we->exercise && $we->exercise->category === 'Custom') ? 'selected' : '' }} style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
+                                    @if(isset($exercises))
+                                        @foreach($exercises as $category => $exGrp)
+                                            <optgroup label="── {{ strtoupper($category) }} ──">
+                                                @foreach($exGrp as $ex)
+                                                    <option value="{{ $ex->id }}" {{ $we->exercise_id == $ex->id ? 'selected' : '' }}>{{ $ex->name }} ({{ $ex->muscle }})</option>
+                                                @endforeach
+                                            </optgroup>
                                         @endforeach
-                                    </optgroup>
-                                @endforeach
-                            @endif
-                        </select>
-                        <!-- Input nama kustom (tersembunyi, muncul jika pilih kustom) -->
-                        <div class="custom-name-wrapper mt-2" style="display: none;">
-                            <input type="text" name="exercises[0][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row, Hip Thrust)...">
-                        </div>
-                    </div>
-
-                    <!-- Daftar Set -->
-                    <div class="sets-wrapper mb-3">
-                        <div class="flex-between align-center mb-2">
-                            <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SET & PROGRES</span>
-                            <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
-                        </div>
-
-                        <!-- Header kolom: SET, BERAT (KG), REPS, TIMER -->
-                        <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
-                            <span class="set-col-label">Set</span>
-                            <span class="flex-1">Berat (kg)</span>
-                            <span class="flex-1">Reps</span>
-                            <span class="set-col-timer text-center">Timer</span>
-                            <span class="set-col-action"></span>
-                        </div>
-
-                        <div class="sets-list-container">
-                            <!-- Set 1 -->
-                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
-                                <span class="badge badge-secondary set-badge">Set 1</span>
-                                <div class="flex-1">
-                                    <input type="number" step="0.5" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                    @endif
+                                </select>
+                                <div class="custom-name-wrapper mt-2" style="{{ ($we->exercise && $we->exercise->category === 'Custom') ? 'display: block;' : 'display: none;' }}">
+                                    <input type="text" name="exercises[{{ $exIdx }}][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row)..." value="{{ ($we->exercise && $we->exercise->category === 'Custom') ? $we->exercise->name : '' }}">
                                 </div>
-                                <div class="flex-1">
-                                    <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                                </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                    ▶️ Mulai
-                                </button>
-                                <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                             </div>
 
-                            <!-- Set 2 -->
-                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
-                                <span class="badge badge-secondary set-badge">Set 2</span>
-                                <div class="flex-1">
-                                    <input type="number" step="0.5" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                            <div class="sets-wrapper mb-3">
+                                <div class="flex-between align-center mb-2">
+                                    <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SET & PROGRES</span>
+                                    <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
                                 </div>
-                                <div class="flex-1">
-                                    <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+
+                                <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
+                                    <span class="set-col-label">Set</span>
+                                    <span class="flex-1">Berat (kg)</span>
+                                    <span class="flex-1">Reps</span>
+                                    <span class="set-col-timer text-center">Timer</span>
+                                    <span class="set-col-action"></span>
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                    ▶️ Mulai
-                                </button>
-                                <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+
+                                <div class="sets-list-container">
+                                    @php
+                                        $setsData = (!empty($we->sets_data) && is_array($we->sets_data)) ? $we->sets_data : [];
+                                        if (empty($setsData)) {
+                                            for ($s = 1; $s <= ($we->sets ?? 3); $s++) {
+                                                $setsData[] = ['set' => $s, 'weight' => $we->weight ?? 0, 'reps' => $we->reps ?? 10];
+                                            }
+                                        }
+                                    @endphp
+                                    @foreach($setsData as $sIdx => $sd)
+                                        <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="{{ $sIdx }}">
+                                            <span class="badge badge-secondary set-badge">Set {{ $sIdx + 1 }}</span>
+                                            <div class="flex-1">
+                                                <input type="number" step="0.5" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="{{ $sd['weight'] ?? 0 }}">
+                                            </div>
+                                            <div class="flex-1">
+                                                <input type="number" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="{{ $sd['reps'] ?? 10 }}">
+                                            </div>
+                                            <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                                                ▶️ Mulai
+                                            </button>
+                                            <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
 
-                            <!-- Set 3 -->
-                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
-                                <span class="badge badge-secondary set-badge">Set 3</span>
-                                <div class="flex-1">
-                                    <input type="number" step="0.5" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                                </div>
-                                <div class="flex-1">
-                                    <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                                </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                    ▶️ Mulai
-                                </button>
-                                <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                            <div class="form-group mb-0">
+                                <input type="text" name="exercises[{{ $exIdx }}][notes]" class="form-control" placeholder="Catatan cth. Set 3 terasa berat (opsional)" value="{{ $we->notes ?? '' }}">
                             </div>
                         </div>
-                    </div>
+                    @endforeach
+                @else
+                    <!-- Gerakan awal jika belum ada sesi ongoing -->
+                    <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="0">
+                        <div class="flex-between align-center mb-3">
+                            <h4 class="m-0 exercise-title text-primary">Gerakan 1</h4>
+                            <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Hapus</button>
+                        </div>
 
-                    <div class="form-group mb-0">
-                        <input type="text" name="exercises[0][notes]" class="form-control" placeholder="Catatan cth. Set 3 terasa berat (opsional)">
+                        <input type="hidden" name="exercises[0][sets]" class="exercise-total-sets" value="3">
+                        <input type="hidden" name="exercises[0][reps]" class="exercise-first-reps" value="10">
+
+                        <div class="form-group mb-3">
+                            <label>Pilih Gerakan</label>
+                            <select name="exercises[0][exercise_id]" class="form-control exercise-select" required>
+                                <option value="">-- Pilih Gerakan --</option>
+                                <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
+                                @if(isset($exercises))
+                                    @foreach($exercises as $category => $exList)
+                                        <optgroup label="── {{ strtoupper($category) }} ──">
+                                            @foreach($exList as $ex)
+                                                <option value="{{ $ex->id }}">{{ $ex->name }} ({{ $ex->muscle }})</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <div class="custom-name-wrapper mt-2" style="display: none;">
+                                <input type="text" name="exercises[0][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row, Hip Thrust)...">
+                            </div>
+                        </div>
+
+                        <div class="sets-wrapper mb-3">
+                            <div class="flex-between align-center mb-2">
+                                <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SET & PROGRES</span>
+                                <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
+                            </div>
+
+                            <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
+                                <span class="set-col-label">Set</span>
+                                <span class="flex-1">Berat (kg)</span>
+                                <span class="flex-1">Reps</span>
+                                <span class="set-col-timer text-center">Timer</span>
+                                <span class="set-col-action"></span>
+                            </div>
+
+                            <div class="sets-list-container">
+                                <!-- Set 1 -->
+                                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
+                                    <span class="badge badge-secondary set-badge">Set 1</span>
+                                    <div class="flex-1">
+                                        <input type="number" step="0.5" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                                    </div>
+                                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                                        ▶️ Mulai
+                                    </button>
+                                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                                </div>
+
+                                <!-- Set 2 -->
+                                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
+                                    <span class="badge badge-secondary set-badge">Set 2</span>
+                                    <div class="flex-1">
+                                        <input type="number" step="0.5" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                                    </div>
+                                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                                        ▶️ Mulai
+                                    </button>
+                                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                                </div>
+
+                                <!-- Set 3 -->
+                                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
+                                    <span class="badge badge-secondary set-badge">Set 3</span>
+                                    <div class="flex-1">
+                                        <input type="number" step="0.5" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                                    </div>
+                                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                                        ▶️ Mulai
+                                    </button>
+                                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <input type="text" name="exercises[0][notes]" class="form-control" placeholder="Catatan cth. Set 3 terasa berat (opsional)">
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>
 
     <div class="form-actions mb-5">
-        <button type="submit" class="btn btn-success btn-block btn-large" style="font-size: 1.1rem; padding: 14px;">✓ Selesai Latihan</button>
+        <button type="submit" class="btn btn-success btn-block btn-large" style="font-size: 1.15rem; padding: 15px; font-weight: 700;">
+            ✓ Selesai Latihan & Simpan
+        </button>
+        <button type="button" id="discard-workout-btn" class="btn btn-outline btn-block mt-3" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.4); font-size: 0.95rem; padding: 10px;">
+            ✕ Batalkan Sesi Latihan Ini
+        </button>
     </div>
 </form>
 
@@ -237,19 +337,16 @@
                 } catch(e) { console.warn('Audio play error:', e); }
             },
             playStartSound() {
-                // Energetic 2-tone ascending chime for starting set or workout
                 this.playTone(587.33, 'sine', 0.12, 0, 0.35);     // D5
                 this.playTone(880.00, 'triangle', 0.22, 0.11, 0.4); // A5
             },
             playCountdownTick() {
-                // Short crisp tick for 3, 2, 1 seconds
                 this.playTone(880, 'sine', 0.08, 0, 0.25);
             },
             playRestCompleteSound() {
-                // Energetic 3-tone victory bell chime when rest time is over!
                 this.playTone(523.25, 'sine', 0.15, 0, 0.35);       // C5
                 this.playTone(659.25, 'sine', 0.15, 0.14, 0.35);    // E5
-                this.playTone(1046.50, 'triangle', 0.5, 0.28, 0.45); // C6 (High Ding!)
+                this.playTone(1046.50, 'triangle', 0.5, 0.28, 0.45); // C6
             }
         };
 
@@ -262,7 +359,7 @@
                 GymAudio.muted = !GymAudio.muted;
                 if (GymAudio.muted) {
                     audioIcon.textContent = '🔇';
-                    audioLabel.textContent = 'Sound Alerts: OFF';
+                    audioLabel.textContent = 'Suara: OFF';
                     audioBtn.style.background = '#F1F5F9';
                     audioBtn.style.color = '#64748B';
                     audioBtn.style.borderColor = '#CBD5E1';
@@ -270,7 +367,7 @@
                     GymAudio.init();
                     GymAudio.playStartSound();
                     audioIcon.textContent = '🔊';
-                    audioLabel.textContent = 'Sound Alerts: ON';
+                    audioLabel.textContent = 'Suara: ON';
                     audioBtn.style.background = '#EFF6FF';
                     audioBtn.style.color = '#1D4ED8';
                     audioBtn.style.borderColor = '#BFDBFE';
@@ -279,16 +376,30 @@
         }
 
         // --- 1. OVERALL WORKOUT STOPWATCH ---
-        let totalSeconds = 0;
         const stopwatchDisplay = document.getElementById('stopwatch-display');
         const durationInput = document.getElementById('duration');
+        const durationSecondsInput = document.getElementById('duration-seconds');
+        
+        let totalSeconds = parseInt(durationSecondsInput ? durationSecondsInput.value : 0) || 0;
+
+        function formatStopwatch(sec) {
+            const mins = String(Math.floor(sec / 60)).padStart(2, '0');
+            const secs = String(sec % 60).padStart(2, '0');
+            return `${mins}:${secs}`;
+        }
+
+        stopwatchDisplay.textContent = formatStopwatch(totalSeconds);
+        if (durationInput && !durationInput.value && totalSeconds > 0) {
+            durationInput.value = Math.max(1, Math.round(totalSeconds / 60));
+        }
 
         setInterval(function() {
             totalSeconds++;
-            const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-            const secs = String(totalSeconds % 60).padStart(2, '0');
-            stopwatchDisplay.textContent = `${mins}:${secs}`;
-            if (durationInput && !durationInput.value) {
+            stopwatchDisplay.textContent = formatStopwatch(totalSeconds);
+            if (durationSecondsInput) {
+                durationSecondsInput.value = totalSeconds;
+            }
+            if (durationInput) {
                 durationInput.value = Math.max(1, Math.round(totalSeconds / 60));
             }
         }, 1000);
@@ -319,7 +430,6 @@
                 const pct = (restRemaining / restTotal) * 100;
                 restProgress.style.width = `${pct}%`;
 
-                // Countdown tick on last 3, 2, 1 seconds
                 if (restRemaining > 0 && restRemaining <= 3) {
                     GymAudio.playCountdownTick();
                 }
@@ -327,7 +437,7 @@
                 if (restRemaining <= 0) {
                     clearInterval(restInterval);
                     restDisplay.textContent = 'ISTIRAHAT SELESAI! 🔔';
-                    GymAudio.playRestCompleteSound(); // Play victory chime sound!
+                    GymAudio.playRestCompleteSound();
                     setTimeout(() => {
                         restBanner.style.display = 'none';
                     }, 3000);
@@ -335,10 +445,12 @@
             }, 1000);
         }
 
-        cancelRestBtn.addEventListener('click', function() {
-            clearInterval(restInterval);
-            restBanner.style.display = 'none';
-        });
+        if (cancelRestBtn) {
+            cancelRestBtn.addEventListener('click', function() {
+                clearInterval(restInterval);
+                restBanner.style.display = 'none';
+            });
+        }
 
         document.querySelectorAll('.set-rest-time').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -360,10 +472,10 @@
                 typeInput.value = type;
                 if(type !== 'Custom') {
                     nameInput.value = type + ' Workout';
-                } else {
-                    nameInput.value = '';
+                } else if(!nameInput.value) {
                     nameInput.focus();
                 }
+                scheduleAutoSave();
             });
         });
 
@@ -378,16 +490,18 @@
             const setsContainer = row.querySelector('.sets-list-container');
             const addSetBtn = row.querySelector('.add-set-btn');
 
-            // Toggle custom input display
-            select.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customWrapper.style.display = 'block';
-                    if (customInput) customInput.required = true;
-                } else {
-                    customWrapper.style.display = 'none';
-                    if (customInput) customInput.required = false;
-                }
-            });
+            if (select) {
+                select.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customWrapper.style.display = 'block';
+                        if (customInput) customInput.required = true;
+                    } else {
+                        customWrapper.style.display = 'none';
+                        if (customInput) customInput.required = false;
+                    }
+                    scheduleAutoSave();
+                });
+            }
 
             // Remove Exercise Row
             const removeBtn = row.querySelector('.remove-exercise-btn');
@@ -396,13 +510,13 @@
                     if (container.querySelectorAll('.exercise-row').length > 1) {
                         row.remove();
                         updateExerciseIndices();
+                        scheduleAutoSave();
                     } else {
-                        alert('You must have at least one exercise.');
+                        alert('Harus ada minimal satu gerakan.');
                     }
                 });
             }
 
-            // Multi-Set Handler
             function updateSetBadges() {
                 const setRows = setsContainer.querySelectorAll('.set-item-row');
                 const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
@@ -437,13 +551,13 @@
                         if (setsContainer.querySelectorAll('.set-item-row').length > 1) {
                             sRow.remove();
                             updateSetBadges();
+                            scheduleAutoSave();
                         } else {
-                            alert('Each exercise must have at least one set.');
+                            alert('Setiap gerakan harus memiliki minimal 1 set.');
                         }
                     });
                 }
 
-                // Individual Live Set Timer
                 const setTimerBtn = sRow.querySelector('.set-row-timer-btn');
                 if (setTimerBtn) {
                     let setRowInterval = null;
@@ -470,10 +584,9 @@
                             this.classList.add('btn-success');
                             this.textContent = `✓ ${setRowSecs}s`;
                             
-                            // Immediately start 60s rest countdown with victory audio alert!
                             startRestTimer(60);
+                            scheduleAutoSave();
                         } else if (status === 'done') {
-                            // Click again resets to idle if needed
                             this.dataset.status = 'idle';
                             this.classList.remove('btn-success');
                             this.classList.add('btn-outline');
@@ -483,7 +596,6 @@
                 }
             }
 
-            // Attach to initial set rows
             setsContainer.querySelectorAll('.set-item-row').forEach(sRow => setupSetRowEvents(sRow));
 
             // Auto-fill weights on set 1 change
@@ -512,7 +624,7 @@
                     const lastReps = lastRow ? lastRow.querySelector('.set-reps-input').value : '10';
 
                     const newSetRow = document.createElement('div');
-                    newSetRow.className = 'set-item-row d-flex align-center flex-gap mb-2 p-2 bg-light rounded';
+                    newSetRow.className = 'set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded';
                     newSetRow.setAttribute('data-set-index', nextSetIdx);
                     
                     const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
@@ -534,6 +646,7 @@
                     setupSetRowEvents(newSetRow);
                     setsContainer.appendChild(newSetRow);
                     updateSetBadges();
+                    scheduleAutoSave();
                 });
             }
         }
@@ -544,7 +657,6 @@
                 row.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
                 row.setAttribute('data-exercise-index', exIdx);
 
-                // Update select & custom input names
                 const select = row.querySelector('.exercise-select');
                 if (select) select.setAttribute('name', `exercises[${exIdx}][exercise_id]`);
                 const customInput = row.querySelector('.custom-name-input');
@@ -557,7 +669,6 @@
                 if (totalSetsInput) totalSetsInput.setAttribute('name', `exercises[${exIdx}][sets]`);
                 if (firstRepsInput) firstRepsInput.setAttribute('name', `exercises[${exIdx}][reps]`);
 
-                // Update set inputs
                 const setRows = row.querySelectorAll('.set-item-row');
                 setRows.forEach((sRow, sIdx) => {
                     const weightInput = sRow.querySelector('.set-weight-input');
@@ -568,77 +679,250 @@
             });
         }
 
-        // Setup first exercise
-        setupExerciseEvents(container.firstElementChild);
+        // Attach events to all existing rows
+        container.querySelectorAll('.exercise-row').forEach(row => setupExerciseEvents(row));
 
         // Add Exercise Button
-        addBtn.addEventListener('click', function() {
-            const exIdx = container.querySelectorAll('.exercise-row').length;
-            const newExRow = container.firstElementChild.cloneNode(true);
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                const exIdx = container.querySelectorAll('.exercise-row').length;
+                const templateRow = container.querySelector('.exercise-row');
+                const newExRow = templateRow.cloneNode(true);
 
-            newExRow.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
-            newExRow.setAttribute('data-exercise-index', exIdx);
+                newExRow.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
+                newExRow.setAttribute('data-exercise-index', exIdx);
 
-            // Reset inputs
-            const select = newExRow.querySelector('.exercise-select');
-            if (select) select.selectedIndex = 0;
+                const select = newExRow.querySelector('.exercise-select');
+                if (select) select.selectedIndex = 0;
 
-            const customWrapper = newExRow.querySelector('.custom-name-wrapper');
-            if (customWrapper) customWrapper.style.display = 'none';
+                const customWrapper = newExRow.querySelector('.custom-name-wrapper');
+                if (customWrapper) customWrapper.style.display = 'none';
 
-            const customInput = newExRow.querySelector('.custom-name-input');
-            if (customInput) customInput.value = '';
+                const customInput = newExRow.querySelector('.custom-name-input');
+                if (customInput) customInput.value = '';
 
-            const notesInput = newExRow.querySelector('input[name*="[notes]"]');
-            if (notesInput) notesInput.value = '';
+                const notesInput = newExRow.querySelector('input[name*="[notes]"]');
+                if (notesInput) notesInput.value = '';
 
-            // Reset sets to 3 blank rows with set-row-timer-btn
-            const setsContainer = newExRow.querySelector('.sets-list-container');
-            setsContainer.innerHTML = `
-                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
-                    <span class="badge badge-secondary set-badge">Set 1</span>
-                    <div class="flex-1">
-                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                const setsContainer = newExRow.querySelector('.sets-list-container');
+                setsContainer.innerHTML = `
+                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
+                        <span class="badge badge-secondary set-badge">Set 1</span>
+                        <div class="flex-1">
+                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                        </div>
+                        <div class="flex-1">
+                            <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                        </div>
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                            ▶️ Mulai
+                        </button>
+                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                     </div>
-                    <div class="flex-1">
-                        <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
+                        <span class="badge badge-secondary set-badge">Set 2</span>
+                        <div class="flex-1">
+                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                        </div>
+                        <div class="flex-1">
+                            <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                        </div>
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                            ▶️ Mulai
+                        </button>
+                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                        ▶️ Mulai
-                    </button>
-                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
-                </div>
-                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
-                    <span class="badge badge-secondary set-badge">Set 2</span>
-                    <div class="flex-1">
-                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
+                        <span class="badge badge-secondary set-badge">Set 3</span>
+                        <div class="flex-1">
+                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                        </div>
+                        <div class="flex-1">
+                            <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                        </div>
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                            ▶️ Mulai
+                        </button>
+                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
                     </div>
-                    <div class="flex-1">
-                        <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                    </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                        ▶️ Mulai
-                    </button>
-                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
-                </div>
-                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
-                    <span class="badge badge-secondary set-badge">Set 3</span>
-                    <div class="flex-1">
-                        <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                    </div>
-                    <div class="flex-1">
-                        <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                    </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                        ▶️ Mulai
-                    </button>
-                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
-                </div>
-            `;
+                `;
 
-            setupExerciseEvents(newExRow);
-            container.appendChild(newExRow);
-            updateExerciseIndices();
+                setupExerciseEvents(newExRow);
+                container.appendChild(newExRow);
+                updateExerciseIndices();
+                scheduleAutoSave();
+            });
+        }
+
+        // --- 5. AUTOMATIC PERSISTENCE & AUTOSAVE ENGINE ---
+        const autosaveStatusEl = document.getElementById('autosave-status');
+        const workoutForm = document.getElementById('workout-form');
+        const workoutIdInput = document.getElementById('workout-id');
+        let autosaveTimeout = null;
+        let isSaving = false;
+
+        function serializeWorkout() {
+            const exercises = [];
+            container.querySelectorAll('.exercise-row').forEach((row, exIdx) => {
+                const select = row.querySelector('.exercise-select');
+                const customInput = row.querySelector('.custom-name-input');
+                const notesInput = row.querySelector('input[name*="[notes]"]');
+                const exerciseId = select ? select.value : '';
+                const customName = customInput ? customInput.value : '';
+                const notes = notesInput ? notesInput.value : '';
+
+                const setsList = [];
+                row.querySelectorAll('.sets-list-container .set-item-row').forEach((sRow, sIdx) => {
+                    const weightInput = sRow.querySelector('.set-weight-input');
+                    const repsInput = sRow.querySelector('.set-reps-input');
+                    setsList.push({
+                        weight: weightInput ? (parseFloat(weightInput.value) || 0) : 0,
+                        reps: repsInput ? (parseInt(repsInput.value) || 0) : 0,
+                    });
+                });
+
+                if (exerciseId) {
+                    exercises.push({
+                        exercise_id: exerciseId,
+                        custom_name: customName,
+                        notes: notes,
+                        sets_list: setsList,
+                    });
+                }
+            });
+
+            return {
+                workout_id: workoutIdInput ? workoutIdInput.value : '',
+                name: nameInput ? (nameInput.value || 'Latihan Baru') : 'Latihan Baru',
+                date: document.getElementById('date').value,
+                duration_seconds: totalSeconds,
+                duration: Math.max(1, Math.round(totalSeconds / 60)),
+                notes: document.getElementById('notes').value,
+                exercises: exercises,
+            };
+        }
+
+        function saveLocalBackup() {
+            try {
+                const data = serializeWorkout();
+                localStorage.setItem('gymtracker_ongoing_workout', JSON.stringify({
+                    data: data,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.warn('LocalStorage backup error:', e);
+            }
+        }
+
+        async function triggerAutoSave() {
+            saveLocalBackup();
+
+            const data = serializeWorkout();
+            // Don't autosave to server if workout has no name and no exercises chosen
+            if (!data.name && data.exercises.length === 0) return;
+
+            if (isSaving) return;
+            isSaving = true;
+
+            if (autosaveStatusEl) {
+                autosaveStatusEl.textContent = '🔄 Menyimpan...';
+                autosaveStatusEl.className = 'badge badge-warning';
+            }
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch('{{ route('workouts.autosave') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.workout_id && workoutIdInput) {
+                        workoutIdInput.value = json.workout_id;
+                    }
+                    if (autosaveStatusEl) {
+                        autosaveStatusEl.textContent = `☁️ Tersimpan (${json.saved_at || 'otomatis'})`;
+                        autosaveStatusEl.className = 'badge badge-secondary';
+                    }
+                }
+            } catch (err) {
+                console.warn('AutoSave background sync:', err);
+                if (autosaveStatusEl) {
+                    autosaveStatusEl.textContent = '💾 Tersimpan lokal';
+                    autosaveStatusEl.className = 'badge badge-secondary';
+                }
+            } finally {
+                isSaving = false;
+            }
+        }
+
+        function scheduleAutoSave() {
+            saveLocalBackup();
+            clearTimeout(autosaveTimeout);
+            autosaveTimeout = setTimeout(triggerAutoSave, 1200);
+        }
+
+        // Listen on inputs
+        if (workoutForm) {
+            workoutForm.addEventListener('input', scheduleAutoSave);
+            workoutForm.addEventListener('change', scheduleAutoSave);
+
+            workoutForm.addEventListener('submit', function() {
+                if (durationSecondsInput) {
+                    durationSecondsInput.value = totalSeconds;
+                }
+                localStorage.removeItem('gymtracker_ongoing_workout');
+            });
+        }
+
+        // Periodic background autosave every 20s
+        setInterval(function() {
+            if (totalSeconds > 0) {
+                triggerAutoSave();
+            }
+        }, 20000);
+
+        // Discard / Cancel workout button
+        const discardBtn = document.getElementById('discard-workout-btn');
+        if (discardBtn) {
+            discardBtn.addEventListener('click', function() {
+                if (!confirm('Yakin ingin membatalkan sesi latihan ini? Semua progres sesi ini akan dihapus.')) {
+                    return;
+                }
+                localStorage.removeItem('gymtracker_ongoing_workout');
+                const wId = workoutIdInput ? workoutIdInput.value : '';
+                if (wId) {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/workouts/${wId}/cancel`;
+                    form.innerHTML = `
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <input type="hidden" name="_method" value="DELETE">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                } else {
+                    window.location.href = '{{ route('workouts.index') }}';
+                }
+            });
+        }
+
+        // Save local backup when navigating away or minimizing app
+        window.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                saveLocalBackup();
+                triggerAutoSave();
+            }
+        });
+        window.addEventListener('beforeunload', function() {
+            saveLocalBackup();
         });
     });
 </script>

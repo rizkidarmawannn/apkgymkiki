@@ -21,8 +21,8 @@
                     <input type="number" step="0.1" name="weight" class="form-control" required placeholder="cth. 75.5">
                 </div>
                 <div class="form-group mb-0 flex-1">
-                    <label>Tanggal</label>
-                    <input type="date" name="date" class="form-control" required value="{{ date('Y-m-d') }}">
+                    <label>Tanggal <small class="text-muted">(dd/mm/yyyy)</small></label>
+                    <input type="text" name="date" class="form-control" required placeholder="dd/mm/yyyy cth. {{ date('d/m/Y') }}" value="{{ date('d/m/Y') }}" pattern="\d{1,2}/\d{1,2}/\d{4}" title="Format: dd/mm/yyyy (contoh: {{ date('d/m/Y') }})">
                 </div>
                 <button type="submit" class="btn btn-primary h-100">Simpan</button>
             </form>
@@ -82,6 +82,31 @@
     </div>
 </div>
 
+<!-- Weight History Table -->
+<div class="card mb-4">
+    <div class="card-header flex-between align-center">
+        <h3 class="m-0">Riwayat Catatan Berat</h3>
+        <span class="text-muted text-xs font-semibold uppercase">Format: dd/mm/yyyy</span>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            @forelse($weightLogs->take(8) ?? [] as $wl)
+                <li class="list-group-item flex-between align-center p-3">
+                    <div class="d-flex align-center flex-gap-sm">
+                        <span class="text-muted">📅</span>
+                        <strong>{{ \Carbon\Carbon::parse($wl->date)->format('d/m/Y') }}</strong>
+                    </div>
+                    <span class="badge badge-primary font-semibold" style="font-size: 0.95rem;">
+                        {{ number_format($wl->weight, 1) }} kg
+                    </span>
+                </li>
+            @empty
+                <li class="list-group-item p-3 text-center text-muted">Belum ada riwayat timbangan berat.</li>
+            @endforelse
+        </ul>
+    </div>
+</div>
+
 <!-- Weekly Summaries -->
 <div class="stats-grid mb-4">
     <div class="card stat-card stat-workouts border-left-info">
@@ -137,9 +162,19 @@
         
         const initialData = @json($weightLogs ?? []);
         
+        function formatDDMMYYYY(dateStr) {
+            if (!dateStr) return '';
+            const clean = String(dateStr).substring(0, 10);
+            const parts = clean.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
         function formatChartData(data) {
             return {
-                labels: data.map(item => item.date),
+                labels: data.map(item => formatDDMMYYYY(item.date)),
                 datasets: [{
                     label: 'Berat Badan (kg)',
                     data: data.map(item => item.weight),

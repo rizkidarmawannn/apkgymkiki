@@ -1308,3 +1308,466 @@ select.form-control {
     gap: 4px;
 }
 
+/* ==========================================================================
+   ONGOING WORKOUT STYLES & LIVE STATUS
+   ========================================================================== */
+.ongoing-workout-floating-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.05));
+    border: 1.5px solid var(--warning);
+    border-radius: var(--r-lg);
+    padding: 12px 18px;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+    margin-bottom: 1.25rem;
+    animation: fadeInBanner 0.3s ease;
+}
+
+[data-theme="dark"] .ongoing-workout-floating-banner {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.08));
+    border-color: rgba(245, 158, 11, 0.7);
+}
+
+.ongoing-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ongoing-pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--warning);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    animation: pulseRing 1.8s infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+@keyframes fadeInBanner {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .ongoing-workout-floating-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .ongoing-banner-action {
+        width: 100%;
+        display: flex;
+    }
+    .ongoing-banner-action .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* ==========================================================================
+   WORKOUT CALENDAR STYLES
+   ========================================================================== */
+.workout-calendar-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-month-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 160px;
+    text-align: center;
+    margin: 0;
+}
+
+.calendar-nav-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.calendar-nav-btn:hover {
+    background: var(--border-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.calendar-grid-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.calendar-weekday-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 0;
+}
+
+.calendar-grid-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.calendar-day-cell {
+    aspect-ratio: 1;
+    min-height: 54px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    user-select: none;
+}
+
+.calendar-day-cell:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background: var(--card-bg);
+}
+
+.calendar-day-cell.other-month {
+    opacity: 0.35;
+    background: transparent;
+    cursor: pointer;
+}
+
+.calendar-day-cell.other-month:hover {
+    border-color: var(--border);
+    transform: none;
+    box-shadow: none;
+}
+
+.calendar-day-cell.today {
+    border: 2px solid var(--primary);
+}
+
+.calendar-day-cell.today .day-number {
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* Day with completed workout */
+.calendar-day-cell.has-workout {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+    border: 1.5px solid var(--accent);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .calendar-day-cell.has-workout {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.1));
+    border-color: #10B981;
+}
+
+.calendar-day-cell.has-workout:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.12));
+    border-color: #059669;
+}
+
+/* Day with ongoing workout */
+.calendar-day-cell.has-ongoing {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.06));
+    border: 1.5px solid var(--warning);
+}
+
+.day-number {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.day-badge-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.day-workout-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 2px;
+}
+
+.workout-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.calendar-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.legend-dot.workout {
+    background: var(--accent);
+}
+
+.legend-dot.ongoing {
+    background: var(--warning);
+}
+
+.legend-dot.today {
+    border: 2px solid var(--primary);
+    background: transparent;
+}
+
+/* Calendar Modal Workout details */
+.calendar-workout-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px;
+    margin-bottom: 12px;
+    transition: border-color var(--transition);
+}
+
+.calendar-workout-item:hover {
+    border-color: var(--primary);
+}
+
+@media (max-width: 640px) {
+    .calendar-day-cell {
+        min-height: 44px;
+        padding: 4px;
+    }
+    .day-number {
+        font-size: 0.75rem;
+    }
+    .day-badge-icon {
+        font-size: 0.95rem;
+    }
+    .calendar-month-title {
+        font-size: 1rem;
+        min-width: 140px;
+    }
+}
+
+/* ==========================================================================
+   HEVY APP STYLE ANNUAL HEATMAP GRID
+   ========================================================================== */
+.hevy-year-card {
+    background: #0B0F19;
+    color: #F8FAFC;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--r-xl);
+    padding: 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.hevy-year-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.hevy-year-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.hevy-grid-scroll-wrapper {
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.hevy-heatmap-container {
+    display: flex;
+    flex-direction: column;
+    min-width: 760px;
+}
+
+.hevy-months-row {
+    display: flex;
+    margin-left: 28px;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94A3B8;
+}
+
+.hevy-month-label {
+    flex: 1;
+    text-align: left;
+}
+
+.hevy-grid-body {
+    display: flex;
+    gap: 8px;
+}
+
+.hevy-weekday-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #64748B;
+    padding-bottom: 2px;
+    width: 20px;
+}
+
+.hevy-weeks-columns {
+    display: flex;
+    gap: 3.5px;
+    flex: 1;
+}
+
+.hevy-week-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5px;
+}
+
+.hevy-day-box {
+    width: 11.5px;
+    height: 11.5px;
+    border-radius: 2.5px;
+    background: #1E293B;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+}
+
+.hevy-day-box:hover {
+    transform: scale(1.4);
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+}
+
+.hevy-day-box.active-workout {
+    background: #2563EB;
+    box-shadow: 0 0 6px rgba(37, 99, 235, 0.75);
+}
+
+.hevy-day-box.active-ongoing {
+    background: #F59E0B;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.75);
+}
+
+.hevy-day-box.is-today {
+    outline: 2px solid #38BDF8;
+    outline-offset: 1px;
+}
+
+.hevy-day-box.is-future {
+    opacity: 0.22;
+    cursor: default;
+}
+
+.hevy-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    font-size: 0.72rem;
+    color: #94A3B8;
+    margin-top: 14px;
+}
+
+.hevy-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.hevy-legend-box {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+
+
+

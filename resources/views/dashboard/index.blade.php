@@ -8,7 +8,11 @@
         <h1 class="mb-0">Halo, {{ $user->name ?? 'Pengguna' }} 👋</h1>
         <p class="text-sm text-muted mb-0">Yuk tetap konsisten hari ini.</p>
     </div>
-    <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Latihan Baru</a>
+    @if(isset($ongoingWorkout) && $ongoingWorkout)
+        <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning" style="font-weight: 700;">▶️ Lanjutkan Latihan</a>
+    @else
+        <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Latihan Baru</a>
+    @endif
 </div>
 
 <div class="stats-grid">
@@ -32,11 +36,39 @@
 
 <div class="dashboard-grid">
     <div class="card">
-        <div class="card-header">
-            <h3>Latihan Hari Ini</h3>
+        <div class="card-header flex-between align-center">
+            <h3 class="m-0">Latihan Hari Ini</h3>
+            <div class="d-flex align-center flex-gap-sm">
+                @if(isset($ongoingWorkout) && $ongoingWorkout)
+                    <span class="badge badge-warning">Sedang Berjalan</span>
+                @endif
+                <a href="{{ route('workouts.index') }}" class="btn btn-small btn-outline" style="padding: 3px 8px; font-size: 0.8rem;" title="Lihat Kalender Latihan">📅 Kalender</a>
+            </div>
         </div>
         <div class="card-body">
-            @if(isset($todayWorkout) && $todayWorkout)
+            @if(isset($ongoingWorkout) && $ongoingWorkout)
+                <div class="p-3 rounded mb-2" style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid var(--warning);">
+                    <div class="flex-between align-center mb-1">
+                        <h3 class="mb-0 text-primary">{{ $ongoingWorkout->name }}</h3>
+                        <span class="badge badge-warning">⚡ ON GOING</span>
+                    </div>
+                    <div class="workout-meta mb-3 mt-1">
+                        <span class="badge badge-info">{{ $ongoingWorkout->workoutExercises->count() }} gerakan</span>
+                        @if($ongoingWorkout->duration)
+                            <span class="badge badge-secondary">{{ $ongoingWorkout->duration }} menit</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-muted mb-3">Sesi latihanmu belum selesai. Klik untuk melanjutkan dan catat set berikutnya!</p>
+                    <div class="d-flex flex-gap-sm">
+                        <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning btn-small flex-1 text-center" style="font-weight: 700;">▶️ Lanjutkan Latihan</a>
+                        <form action="{{ route('workouts.cancel', $ongoingWorkout) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan sesi latihan ini?');" class="m-0">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline btn-small" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Batalkan</button>
+                        </form>
+                    </div>
+                </div>
+            @elseif(isset($todayWorkout) && $todayWorkout)
                 <div>
                     <h3 class="mb-2">{{ $todayWorkout->name }}</h3>
                     <div class="workout-meta mb-3">
@@ -46,6 +78,9 @@
                             {{ $todayWorkout->status === 'completed' ? 'Selesai' : 'Sedang Berjalan' }}
                         </span>
                     </div>
+                    @if($todayWorkout->status === 'in_progress')
+                        <a href="{{ route('workouts.resume', $todayWorkout) }}" class="btn btn-warning btn-small mr-2">▶️ Lanjutkan Latihan</a>
+                    @endif
                     <a href="{{ route('workouts.show', $todayWorkout) }}" class="btn btn-outline btn-small">Lihat Detail</a>
                 </div>
             @else

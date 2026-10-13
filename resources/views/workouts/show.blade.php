@@ -22,9 +22,20 @@
             <span class="badge badge-primary">📅 {{ isset($workout->date) ? \Carbon\Carbon::parse($workout->date)->locale('id')->translatedFormat('d F Y') : 'Tanggal' }}</span>
             <span class="badge badge-secondary">⏱️ {{ $workout->duration ?? 0 }} menit</span>
             <span class="badge badge-{{ ($workout->status ?? '') === 'completed' ? 'success' : 'warning' }}">
-                {{ ($workout->status ?? '') === 'completed' ? 'Selesai' : 'Belum Selesai' }}
+                {{ ($workout->status ?? '') === 'completed' ? 'Selesai' : 'Sedang Berjalan' }}
             </span>
         </div>
+        @if(($workout->status ?? '') === 'in_progress')
+            <div class="alert alert-warning mt-3 flex-between align-center" style="border: 1px solid var(--warning); background: var(--warning-light);">
+                <div>
+                    <strong>⚡ Sesi Latihan Sedang Berjalan!</strong>
+                    <div class="text-sm">Latihan ini belum diselesaikan. Lanjutkan sekarang untuk mencatat progres lainnya.</div>
+                </div>
+                <a href="{{ route('workouts.resume', $workout) }}" class="btn btn-warning btn-small ml-2" style="font-weight: 700; white-space: nowrap;">
+                    ▶️ Lanjutkan Latihan
+                </a>
+            </div>
+        @endif
         @if(!empty($workout->notes))
             <div class="mt-3" style="border-top: 1px solid var(--border); padding-top: 12px;">
                 <small class="text-muted fw-semibold">CATATAN</small>
