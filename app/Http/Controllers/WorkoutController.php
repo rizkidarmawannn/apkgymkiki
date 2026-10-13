@@ -8,6 +8,7 @@ use App\Models\WorkoutExercise;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class WorkoutController extends Controller
 {
@@ -254,82 +255,88 @@ class WorkoutController extends Controller
         $durationSecs = (int)($request->duration_seconds ?? 0);
         $durationMins = $durationSecs > 0 ? (int)ceil($durationSecs / 60) : ($request->duration ? (int)$request->duration : null);
 
-        $workout = null;
-        if (!empty($request->workout_id)) {
-            $workout = Workout::where('user_id', Auth::id())
-                ->where('id', $request->workout_id)
-                ->first();
-        }
-
-        if (!$workout) {
-            $workout = Workout::where('user_id', Auth::id())
-                ->where('status', 'in_progress')
-                ->latest('id')
-                ->first();
-        }
-
-        if ($workout) {
-            $workout->update([
-                'name' => $request->name,
-                'date' => $request->date ?? Carbon::today(),
-                'duration' => $durationMins ?: ($workout->duration ?: 1),
-                'duration_seconds' => $durationSecs ?: $workout->duration_seconds,
-                'notes' => $request->notes,
-                'status' => 'completed',
-            ]);
-            $workout->workoutExercises()->delete();
-        } else {
-            $workout = Workout::create([
-                'user_id' => Auth::id(),
-                'name' => $request->name,
-                'date' => $request->date ?? Carbon::today(),
-                'duration' => $durationMins ?: 1,
-                'duration_seconds' => $durationSecs,
-                'notes' => $request->notes,
-                'status' => 'completed',
-            ]);
-        }
-
-        foreach ($request->exercises as $ex) {
-            $exerciseId = $ex['exercise_id'];
-            if ($exerciseId === 'custom' || !is_numeric($exerciseId)) {
-                $customName = !empty($ex['custom_name']) ? trim($ex['custom_name']) : 'Custom Exercise';
-                $exercise = Exercise::firstOrCreate(
-                    ['name' => $customName],
-                    ['category' => 'Custom', 'muscle' => 'General']
-                );
-                $exerciseId = $exercise->id;
+        $workout = DB::transaction(function () use ($request, $durationSecs, $durationMins) {
+            $workout = null;
+            if (!empty($request->workout_id)) {
+                $workout = Workout::where('user_id', Auth::id())
+                    ->where('id', $request->workout_id)
+                    ->first();
             }
 
-            // Individual Sets Data (e.g. Set 1: 40kg 12 reps, Set 2: 45kg 10 reps)
-            $setsData = [];
-            if (!empty($ex['sets_list']) && is_array($ex['sets_list'])) {
-                foreach ($ex['sets_list'] as $idx => $setData) {
-                    $setsData[] = [
-                        'set' => $idx + 1,
-                        'weight' => (float)($setData['weight'] ?? $ex['weight'] ?? 0),
-                        'reps' => (int)($setData['reps'] ?? $ex['reps'] ?? 0),
-                    ];
+            if (!$workout) {
+                $workout = Workout::where('user_id', Auth::id())
+                    ->where('status', 'in_progress')
+                    ->latest('id')
+                    ->first();
+            }
+
+            if ($workout) {
+                $workout->update([
+                    'name' => $request->name,
+                    'date' => $request->date ?? Carbon::today(),
+                    'duration' => $durationMins ?: ($workout->duration ?: 1),
+                    'duration_seconds' => $durationSecs ?: $workout->duration_seconds,
+                    'notes' => $request->notes,
+                    'status' => 'completed',
+                ]);
+                $workout->workoutExercises()->delete();
+            } else {
+                $workout = Workout::create([
+                    'user_id' => Auth::id(),
+                    'name' => $request->name,
+                    'date' => $request->date ?? Carbon::today(),
+                    'duration' => $durationMins ?: 1,
+                    'duration_seconds' => $durationSecs,
+                    'notes' => $request->notes,
+                    'status' => 'completed',
+                ]);
+            }
+
+            foreach ($request->exercises as $ex) {
+                $exerciseId = $ex['exercise_id'];
+                if ($exerciseId === 'custom' || !is_numeric($exerciseId)) {
+                    $customName = !empty($ex['custom_name']) ? trim($ex['custom_name']) : 'Custom Exercise';
+                    $exercise = Exercise::firstOrCreate(
+                        ['name' => $customName],
+                        ['category' => 'Custom', 'muscle' => 'General']
+                    );
+                    $exerciseId = $exercise->id;
                 }
+
+                // Individual Sets Data (e.g. Set 1: 40kg 12 reps, Set 2: 45kg 10 reps)
+                $setsData = [];
+                if (!empty($ex['sets_list']) && is_array($ex['sets_list'])) {
+                    foreach ($ex['sets_list'] as $idx => $setData) {
+                        $setsData[] = [
+                            'set' => $idx + 1,
+                            'weight' => (float)($setData['weight'] ?? $ex['weight'] ?? 0),
+                            'reps' => (int)($setData['reps'] ?? $ex['reps'] ?? 0),
+                        ];
+                    }
+                }
+
+                $weights = !empty($setsData) ? array_column($setsData, 'weight') : [];
+                $maxWeight = !empty($weights) ? max($weights) : (float)($ex['weight'] ?? 0);
+                $totalSets = !empty($setsData) ? count($setsData) : (int)($ex['sets'] ?? 1);
+                $firstReps = !empty($setsData) ? (int)($setsData[0]['reps'] ?? 10) : (int)($ex['reps'] ?? 10);
+
+                WorkoutExercise::create([
+                    'workout_id' => $workout->id,
+                    'exercise_id' => (int)$exerciseId,
+                    'weight' => $maxWeight,
+                    'sets' => $totalSets,
+                    'reps' => $firstReps,
+                    'sets_data' => !empty($setsData) ? $setsData : null,
+                    'notes' => $ex['notes'] ?? null,
+                ]);
             }
 
-            $maxWeight = !empty($setsData) ? max(array_column($setsData, 'weight')) : ($ex['weight'] ?? 0);
-            $totalSets = !empty($setsData) ? count($setsData) : ($ex['sets'] ?? 1);
-            $firstReps = !empty($setsData) ? ($setsData[0]['reps'] ?? 10) : ($ex['reps'] ?? 10);
-
-            WorkoutExercise::create([
-                'workout_id' => $workout->id,
-                'exercise_id' => $exerciseId,
-                'weight' => $maxWeight,
-                'sets' => $totalSets,
-                'reps' => $firstReps,
-                'sets_data' => !empty($setsData) ? $setsData : null,
-                'notes' => $ex['notes'] ?? null,
-            ]);
-        }
+            return $workout;
+        });
 
         return redirect()->route('workouts.show', $workout)->with('success', 'Latihan selesai dan berhasil disimpan! 💪');
     }
+
 
     public function cancel(Workout $workout)
     {
@@ -346,6 +353,8 @@ class WorkoutController extends Controller
         // Check for personal records
         $prs = [];
         foreach ($workout->workoutExercises as $we) {
+            if (!$we->exercise) continue; // guard against orphaned exercise_id
+
             $previousMax = WorkoutExercise::where('exercise_id', $we->exercise_id)
                 ->whereHas('workout', fn($q) => $q->where('user_id', Auth::id())->where('id', '!=', $workout->id))
                 ->max('weight');
