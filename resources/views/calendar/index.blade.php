@@ -21,7 +21,14 @@
     </div>
     <div class="stat-card">
         <h3>Streak Konsistensi</h3>
-        <p class="stat-value text-warning">{{ $currentStreak }} <small class="text-muted text-sm fw-medium">hari beruntun</small></p>
+        <p class="stat-value text-warning">
+            @if(isset($streakData) && $streakData['current_streak'] > 0)
+                <span style="font-size: 1.1em;">🔥</span> {{ $streakData['current_streak'] }}
+                <small class="text-muted text-sm fw-medium">({{ $streakData['flame_title'] }})</small>
+            @else
+                <span style="font-size: 1.1em;">🕯️</span> 0 <small class="text-muted text-sm fw-medium">hari</small>
+            @endif
+        </p>
     </div>
     <div class="stat-card">
         <h3>Hari Aktif</h3>

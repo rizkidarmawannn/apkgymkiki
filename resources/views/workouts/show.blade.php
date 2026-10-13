@@ -35,6 +35,14 @@
                     ▶️ Lanjutkan Latihan
                 </a>
             </div>
+        @elseif(($workout->status ?? '') === 'completed' && isset($streakData) && $streakData['current_streak'] > 0)
+            <div class="streak-celebration-box mt-3">
+                <div class="streak-celebration-icon">🔥</div>
+                <div class="streak-celebration-text">
+                    <strong>Streak Api Menyala: {{ $streakData['current_streak'] }} Hari Beruntun!</strong>
+                    <p class="mb-0 text-sm">Konsistensimu luar biasa. {{ $streakData['flame_title'] }} terjaga hari ini!</p>
+                </div>
+            </div>
         @endif
         @if(!empty($workout->notes))
             <div class="mt-3" style="border-top: 1px solid var(--border); padding-top: 12px;">

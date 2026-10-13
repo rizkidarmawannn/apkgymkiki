@@ -1768,6 +1768,420 @@ select.form-control {
     border-radius: 2px;
 }
 
+/* ========================================================
+   TIKTOK-STYLE FLAME STREAK SYSTEM
+   ======================================================== */
+
+/* Navbar Streak Pill */
+.streak-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+    white-space: nowrap;
+}
+
+.streak-pill:hover {
+    transform: scale(1.08);
+}
+
+.streak-pill-lit {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(249, 115, 22, 0.25));
+    border: 1.5px solid #F97316;
+    color: #EA580C;
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.35);
+}
+
+[data-theme="dark"] .streak-pill-lit {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(249, 115, 22, 0.35));
+    color: #FB923C;
+    box-shadow: 0 0 14px rgba(249, 115, 22, 0.5);
+}
+
+.streak-pill-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.25));
+    border: 1.5px solid #F59E0B;
+    color: #D97706;
+    animation: warningPulse 2s infinite ease-in-out;
+}
+
+[data-theme="dark"] .streak-pill-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(234, 179, 8, 0.35));
+    color: #FBBF24;
+}
+
+.streak-pill-extinguished {
+    background: var(--bg-hover);
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+}
+
+.streak-flame-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* Dashboard TikTok Streak Card */
+.tiktok-streak-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(254, 242, 242, 0.95), rgba(255, 237, 213, 0.9));
+    border: 1.5px solid rgba(249, 115, 22, 0.35);
+    border-radius: var(--r-xl);
+    padding: 22px 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.12);
+    transition: transform var(--transition);
+}
+
+[data-theme="dark"] .tiktok-streak-card {
+    background: linear-gradient(135deg, #181216 0%, #20131A 50%, #1A1412 100%);
+    border-color: rgba(249, 115, 22, 0.4);
+    box-shadow: 0 8px 30px rgba(249, 115, 22, 0.18);
+}
+
+/* Dynamic Flame Themes */
+.tiktok-streak-card.flame-theme-warm {
+    border-color: rgba(249, 115, 22, 0.5);
+}
+
+.tiktok-streak-card.flame-theme-blazing {
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 10px 32px rgba(239, 68, 68, 0.22);
+}
+
+.tiktok-streak-card.flame-theme-intense {
+    border-color: rgba(168, 85, 247, 0.6);
+    box-shadow: 0 10px 32px rgba(168, 85, 247, 0.22);
+}
+
+.tiktok-streak-card.flame-theme-inferno {
+    border-color: rgba(234, 179, 8, 0.7);
+    box-shadow: 0 12px 36px rgba(245, 158, 11, 0.3);
+}
+
+.tiktok-streak-card.flame-theme-godlike {
+    border-color: #F59E0B;
+    background: linear-gradient(135deg, #261705 0%, #351610 50%, #241328 100%);
+    box-shadow: 0 14px 40px rgba(245, 158, 11, 0.4);
+}
+
+.streak-card-inner {
+    position: relative;
+    z-index: 2;
+}
+
+.streak-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.streak-badge-hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.flame-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #FFEDD5, #FEE2E2);
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .flame-icon-wrapper {
+    background: linear-gradient(135deg, #3B1C10, #31151F);
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.45);
+}
+
+.flame-emoji-hero {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+/* Flame Animations */
+.flame-animated {
+    animation: flameBounce 1.8s infinite ease-in-out;
+}
+
+.flame-flicker {
+    animation: flameFlicker 1.2s infinite ease-in-out;
+}
+
+@keyframes flameBounce {
+    0%, 100% {
+        transform: scale(1) translateY(0);
+        box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+    }
+    50% {
+        transform: scale(1.1) translateY(-3px);
+        box-shadow: 0 8px 26px rgba(239, 68, 68, 0.55);
+    }
+}
+
+@keyframes flameFlicker {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+    }
+    25% {
+        transform: scale(1.05) rotate(-3deg);
+        filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
+    }
+    75% {
+        transform: scale(0.96) rotate(3deg);
+        filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+    }
+}
+
+@keyframes warningPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 rgba(245, 158, 11, 0);
+    }
+    50% {
+        box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+    }
+}
+
+.streak-counter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.streak-number-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.streak-number {
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, #EF4444, #F97316);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.03em;
+}
+
+[data-theme="dark"] .streak-number {
+    background: linear-gradient(135deg, #F87171, #FB923C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.streak-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.streak-status-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    padding: 2px 10px;
+    width: fit-content;
+}
+
+.streak-status-badge.status-lit {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16A34A;
+}
+
+[data-theme="dark"] .streak-status-badge.status-lit {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ADE80;
+}
+
+.streak-status-badge.status-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #D97706;
+    animation: warningPulse 1.6s infinite ease-in-out;
+}
+
+[data-theme="dark"] .streak-status-badge.status-warning {
+    background: rgba(245, 158, 11, 0.25);
+    color: #FBBF24;
+}
+
+.streak-status-badge.status-extinguished {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+}
+
+.streak-best-badge {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 8px 14px;
+    text-align: right;
+    backdrop-filter: blur(4px);
+}
+
+[data-theme="dark"] .streak-best-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.best-label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.best-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #F59E0B;
+}
+
+.streak-motivation-msg {
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.55);
+    padding: 10px 14px;
+    border-radius: var(--r-md);
+}
+
+[data-theme="dark"] .streak-motivation-msg {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.streak-motivation-msg p {
+    margin: 0;
+}
+
+.streak-motivation-msg .warning-text {
+    color: #D97706;
+}
+
+[data-theme="dark"] .streak-motivation-msg .warning-text {
+    color: #FBBF24;
+}
+
+/* 7-Day Week Indicator */
+.streak-week-track {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px dashed rgba(249, 115, 22, 0.25);
+    padding-top: 12px;
+}
+
+.streak-week-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.streak-week-days {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.streak-day-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 32px;
+    padding: 4px 6px;
+    border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border-light);
+    font-size: 0.72rem;
+}
+
+[data-theme="dark"] .streak-day-item {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.streak-day-item.day-today {
+    border-color: #F97316;
+    background: rgba(249, 115, 22, 0.12);
+}
+
+.streak-day-item.day-done {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(249, 115, 22, 0.4);
+}
+
+.streak-day-item .day-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.streak-day-item.day-today .day-name {
+    color: #F97316;
+    font-weight: 700;
+}
+
+.streak-day-item .day-dot {
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.dot-pulse {
+    color: #F97316;
+    animation: warningPulse 1.2s infinite;
+}
+
+.dot-empty {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* Streak Celebration Box in Workout Show */
+.streak-celebration-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.18));
+    border: 1.5px solid #F97316;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    animation: flameBounce 2s infinite ease-in-out;
+}
+
+.streak-celebration-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.streak-celebration-text strong {
+    color: #EA580C;
+    display: block;
+}
+
+[data-theme="dark"] .streak-celebration-text strong {
+    color: #FB923C;
+}
+
+
 
 
 

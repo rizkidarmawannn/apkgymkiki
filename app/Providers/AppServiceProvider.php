@@ -28,12 +28,16 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('*', function ($view) {
             if (Auth::check()) {
-                $activeWorkout = Workout::where('user_id', Auth::id())
+                $userId = Auth::id();
+                $activeWorkout = Workout::where('user_id', $userId)
                     ->where('status', 'in_progress')
                     ->with('workoutExercises.exercise')
                     ->latest('id')
                     ->first();
-                $view->with('activeWorkout', $activeWorkout);
+                $streakData = \App\Services\StreakService::getStreakData($userId);
+
+                $view->with('activeWorkout', $activeWorkout)
+                     ->with('streakData', $streakData);
             }
         });
     }

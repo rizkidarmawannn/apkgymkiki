@@ -15,6 +15,78 @@
     @endif
 </div>
 
+@if(isset($streakData))
+<div id="streak-section" class="tiktok-streak-card mb-4 flame-theme-{{ $streakData['flame_level'] }}">
+    <div class="streak-glow-bg"></div>
+    <div class="streak-card-inner">
+        <div class="streak-header-row">
+            <div class="streak-badge-hero">
+                <div class="flame-icon-wrapper {{ $streakData['status'] === 'lit' ? 'flame-animated' : ($streakData['status'] === 'warning' ? 'flame-flicker' : '') }}">
+                    @if($streakData['status'] === 'extinguished')
+                        <span class="flame-emoji-hero">🕯️</span>
+                    @elseif($streakData['status'] === 'warning')
+                        <span class="flame-emoji-hero">⏳</span>
+                    @else
+                        <span class="flame-emoji-hero">🔥</span>
+                    @endif
+                </div>
+                <div class="streak-counter-info">
+                    <div class="streak-number-row">
+                        <span class="streak-number">{{ $streakData['current_streak'] }}</span>
+                        <span class="streak-label">HARI STREAK</span>
+                    </div>
+                    <div class="streak-status-badge status-{{ $streakData['status'] }}">
+                        @if($streakData['status'] === 'lit')
+                            <span>⚡ {{ $streakData['flame_title'] }}</span>
+                        @elseif($streakData['status'] === 'warning')
+                            <span>⚠️ Apimu Hampir Padam Hari Ini!</span>
+                        @else
+                            <span>💤 Belum Ada Streak Aktif</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="streak-best-badge">
+                <span class="best-label">🏆 Rekor Terbaik</span>
+                <span class="best-value">{{ $streakData['best_streak'] }} Hari</span>
+            </div>
+        </div>
+
+        <div class="streak-motivation-msg">
+            @if($streakData['status'] === 'lit')
+                <p>🔥 <strong>Kerja keras terbayar!</strong> Latihan hari ini sudah dicatat. Jaga api streakmu tetap menyala besok!</p>
+            @elseif($streakData['status'] === 'warning')
+                <p class="warning-text">⏰ <strong>Peringatan Streak!</strong> Kamu latihan kemarin tapi belum ada sesi hari ini. Selesaikan 1 latihan sebelum 23:59 agar apimu tidak padam!</p>
+            @else
+                <p>💪 <strong>Mulai apimu hari ini!</strong> Selesaikan latihan pertamamu sekarang untuk memantik streak api seperti TikTok.</p>
+            @endif
+        </div>
+
+        <!-- 7-Day Week Indicator Dots -->
+        <div class="streak-week-track">
+            <div class="streak-week-label">Minggu Ini:</div>
+            <div class="streak-week-days">
+                @foreach($streakData['week_days'] as $wDay)
+                    <div class="streak-day-item {{ $wDay['is_today'] ? 'day-today' : '' }} {{ $wDay['has_workout'] ? 'day-done' : '' }}">
+                        <span class="day-name">{{ $wDay['day_name'] }}</span>
+                        <div class="day-dot">
+                            @if($wDay['has_workout'])
+                                <span>🔥</span>
+                            @elseif($wDay['is_today'])
+                                <span class="dot-pulse">●</span>
+                            @else
+                                <span class="dot-empty">•</span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="stats-grid">
     <div class="stat-card">
         <h3>Berat Sekarang</h3>

@@ -51,6 +51,12 @@
                 </a>
             </div>
             <div class="d-flex align-center flex-gap-sm">
+                @if(isset($streakData))
+                    <a href="{{ route('dashboard') }}#streak-section" class="streak-pill streak-pill-{{ $streakData['status'] }}" title="Streak Konsistensi: {{ $streakData['current_streak'] }} Hari ({{ $streakData['flame_title'] }})">
+                        <span class="streak-flame-icon">{{ $streakData['status'] === 'extinguished' ? '🕯️' : '🔥' }}</span>
+                        <span class="streak-count">{{ $streakData['current_streak'] }}</span>
+                    </a>
+                @endif
                 <!-- Settings Button (Theme, Color, Language) -->
                 <button type="button" class="btn-theme-toggle open-settings-btn" title="Pengaturan Tampilan & Bahasa">
                     <span>⚙️</span>
