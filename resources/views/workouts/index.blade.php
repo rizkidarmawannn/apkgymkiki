@@ -152,11 +152,14 @@
     </div>
 </div>
 
+@php
+    $safeCalendarData = $calendarData ?? ['month' => date('Y-m'), 'month_label' => '', 'total_completed' => 0, 'workouts_by_date' => []];
+@endphp
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Data kalender awal dari server
-        let calendarState = {!! json_encode($calendarData ?? ['month' => date('Y-m'), 'month_label' => '', 'total_completed' => 0, 'workouts_by_date' => []]) !!};
+        let calendarState = {!! json_encode($safeCalendarData) !!};
         let currentYearMonth = calendarState.month || '{{ date("Y-m") }}';
 
         const monthHeading = document.getElementById('calendar-month-heading');
