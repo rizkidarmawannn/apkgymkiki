@@ -95,7 +95,11 @@ class CalendarController extends Controller
                 'duration' => $w->duration,
                 'date' => $dateKey,
                 'date_formatted' => Carbon::parse($w->date)->format('d/m/Y'),
-                'date_full' => Carbon::parse($w->date)->locale('id')->translatedFormat('l, d F Y'),
+                'date_full' => (function($date) {
+                    $days = [0=>'Minggu',1=>'Senin',2=>'Selasa',3=>'Rabu',4=>'Kamis',5=>'Jumat',6=>'Sabtu'];
+                    $months = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+                    return $days[(int)$date->format('w')] . ', ' . $date->format('d') . ' ' . $months[(int)$date->format('n')] . ' ' . $date->format('Y');
+                })(Carbon::parse($w->date)),
                 'exercise_count' => $w->workoutExercises->count(),
                 'exercises' => $w->workoutExercises->map(function ($we) {
                     return [

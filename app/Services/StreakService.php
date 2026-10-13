@@ -105,7 +105,7 @@ class StreakService
             $day = $startOfWeek->copy()->addDays($i);
             $dayStr = $day->format('Y-m-d');
             $weekDays[] = [
-                'day_name' => $day->locale('id')->translatedFormat('D'),
+                'day_name' => ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][(int)$day->format('w')],
                 'date' => $day->format('d/m'),
                 'is_today' => ($dayStr === $today),
                 'is_past' => $day->isPast() && ($dayStr !== $today),

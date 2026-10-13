@@ -62,6 +62,38 @@ class WorkoutController extends Controller
         return response()->json($this->formatCalendarData($workouts, $month));
     }
 
+    /**
+     * Format tanggal ke Bahasa Indonesia tanpa butuh Carbon locale (aman untuk Vercel/serverless).
+     */
+    private static function idDate(Carbon $date, string $format = 'd M Y'): string
+    {
+        static $months = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+            5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu',
+            9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
+        static $monthsFull = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+        static $days = [
+            0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu',
+            4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu',
+        ];
+
+        $d = (int)$date->format('j');
+        $m = (int)$date->format('n');
+        $y = $date->format('Y');
+        $dow = (int)$date->format('w');
+
+        return str_replace(
+            ['l,', 'l', 'F', 'M', 'd', 'Y'],
+            [$days[$dow] . ',', $days[$dow], $monthsFull[$m], $months[$m], sprintf('%02d', $d), $y],
+            $format
+        );
+    }
+
     private function formatCalendarData($workouts, string $month): array
     {
         $startDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
@@ -78,7 +110,7 @@ class WorkoutController extends Controller
                 'name' => $w->name,
                 'status' => $w->status,
                 'duration' => $w->duration,
-                'date_formatted' => Carbon::parse($w->date)->locale('id')->translatedFormat('l, d F Y'),
+                'date_formatted' => self::idDate(Carbon::parse($w->date), 'l, d F Y'),
                 'exercise_count' => $w->workoutExercises->count(),
                 'exercises' => $w->workoutExercises->map(function ($we) {
                     return [
@@ -96,7 +128,7 @@ class WorkoutController extends Controller
 
         return [
             'month' => $month,
-            'month_label' => $startDate->locale('id')->translatedFormat('F Y'),
+            'month_label' => self::idDate($startDate, 'F Y'),
             'total_completed' => $workouts->where('status', 'completed')->count(),
             'workouts_by_date' => $grouped,
         ];
@@ -164,7 +196,7 @@ class WorkoutController extends Controller
 
         $name = trim($request->name ?? '');
         if (empty($name)) {
-            $name = 'Latihan ' . Carbon::today()->translatedFormat('d M Y');
+            $name = 'Latihan ' . self::idDate(Carbon::today(), 'd M Y');
         }
 
         if (!$workout) {

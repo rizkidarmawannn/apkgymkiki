@@ -23,7 +23,7 @@
         <div class="flex-between align-center mb-2">
             <div class="d-flex align-center flex-gap-sm">
                 <span class="badge badge-warning" style="font-weight: 700; font-size: 0.8rem; letter-spacing: 0.04em;">⚡ SEDANG BERJALAN</span>
-                <span class="text-sm text-muted">{{ \Carbon\Carbon::parse($ongoingWorkout->date)->locale('id')->translatedFormat('d M Y') }}</span>
+                <span class="text-sm text-muted">{{ \Carbon\Carbon::parse($ongoingWorkout->date)->format('d/m/Y') }}</span>
             </div>
             <form action="{{ route('workouts.cancel', $ongoingWorkout) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan sesi latihan ini?');" class="m-0">
                 @csrf
@@ -53,7 +53,7 @@
         <div class="calendar-nav">
             <button type="button" class="calendar-nav-btn" id="prev-month-btn" title="Bulan Sebelumnya">◀</button>
             <h2 class="calendar-month-title" id="calendar-month-heading">
-                {{ $calendarData['month_label'] ?? \Carbon\Carbon::today()->locale('id')->translatedFormat('F Y') }}
+                {{ $calendarData['month_label'] ?? \Carbon\Carbon::today()->format('F Y') }}
             </h2>
             <button type="button" class="calendar-nav-btn" id="next-month-btn" title="Bulan Berikutnya">▶</button>
             <button type="button" class="calendar-nav-btn" id="today-month-btn" style="font-size: 0.8rem; font-weight: 600;">Hari Ini</button>
@@ -109,7 +109,7 @@
         <a href="{{ route('workouts.show', $workout) }}" class="workout-card-link">
             <div class="flex-between align-center mb-2">
                 <h3>{{ $workout->name }}</h3>
-                <span class="text-muted text-sm">{{ \Carbon\Carbon::parse($workout->date)->locale('id')->translatedFormat('d M Y') }}</span>
+                <span class="text-muted text-sm">{{ \Carbon\Carbon::parse($workout->date)->format('d/m/Y') }}</span>
             </div>
             <div class="workout-meta">
                 <span class="badge badge-info">{{ $workout->workoutExercises->count() }} gerakan</span>

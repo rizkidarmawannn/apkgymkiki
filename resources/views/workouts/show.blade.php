@@ -19,7 +19,7 @@
     <div class="card-body">
         <h2>{{ $workout->name ?? 'Nama Latihan' }}</h2>
         <div class="workout-meta mt-2 flex-gap">
-            <span class="badge badge-primary">📅 {{ isset($workout->date) ? \Carbon\Carbon::parse($workout->date)->locale('id')->translatedFormat('d F Y') : 'Tanggal' }}</span>
+            <span class="badge badge-primary">📅 {{ isset($workout->date) ? \Carbon\Carbon::parse($workout->date)->format('d/m/Y') : 'Tanggal' }}</span>
             <span class="badge badge-secondary">⏱️ {{ $workout->duration ?? 0 }} menit</span>
             <span class="badge badge-{{ ($workout->status ?? '') === 'completed' ? 'success' : 'warning' }}">
                 {{ ($workout->status ?? '') === 'completed' ? 'Selesai' : 'Sedang Berjalan' }}

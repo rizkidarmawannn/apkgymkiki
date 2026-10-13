@@ -122,7 +122,7 @@
         <div class="calendar-nav">
             <button type="button" class="calendar-nav-btn" id="prev-month-btn" title="Bulan Sebelumnya">◀</button>
             <h2 class="calendar-month-title" id="calendar-month-heading">
-                {{ \Carbon\Carbon::today()->locale('id')->translatedFormat('F Y') }}
+                {{ \Carbon\Carbon::today()->format('F Y') }}
             </h2>
             <button type="button" class="calendar-nav-btn" id="next-month-btn" title="Bulan Berikutnya">▶</button>
             <button type="button" class="calendar-nav-btn" id="today-month-btn" style="font-size: 0.8rem; font-weight: 600;">Hari Ini</button>
