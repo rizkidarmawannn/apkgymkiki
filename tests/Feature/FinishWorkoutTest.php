@@ -118,4 +118,54 @@ class FinishWorkoutTest extends TestCase
         $response = $this->actingAs($user)->get(route('workouts.show', $workout));
         $response->assertStatus(200);
     }
+
+    public function test_autosave_does_not_resurrect_completed_workout(): void
+    {
+        $user = User::factory()->create();
+        $exercise = $this->makeExercise();
+
+        $workout = Workout::create([
+            'user_id' => $user->id,
+            'name' => 'Latihan Selesai',
+            'date' => now()->format('Y-m-d'),
+            'duration' => 30,
+            'status' => 'completed',
+        ]);
+
+        // Simulating autosave triggering after workout is already completed
+        $response = $this->actingAs($user)->postJson(route('workouts.autosave'), [
+            'workout_id' => $workout->id,
+            'name' => 'Latihan Selesai',
+            'date' => now()->format('Y-m-d'),
+            'exercises' => [
+                [
+                    'exercise_id' => $exercise->id,
+                    'sets_list' => [['weight' => 50, 'reps' => 10]],
+                ],
+            ],
+        ]);
+
+        $response->assertJson(['success' => false]);
+        $this->assertEquals(0, Workout::where('user_id', $user->id)->where('status', 'in_progress')->count());
+    }
+
+    public function test_create_does_not_hijack_in_progress_from_different_date(): void
+    {
+        $user = User::factory()->create();
+
+        // Old in-progress workout from yesterday
+        Workout::create([
+            'user_id' => $user->id,
+            'name' => 'Latihan Kemarin',
+            'date' => now()->subDay()->format('Y-m-d'),
+            'duration' => 10,
+            'status' => 'in_progress',
+        ]);
+
+        // User clicks today on calendar to start workout today
+        $response = $this->actingAs($user)->get(route('workouts.create', ['date' => now()->format('Y-m-d')]));
+        $response->assertStatus(200);
+        $response->assertViewHas('activeWorkout', null);
+        $response->assertViewHas('selectedDate', now()->format('Y-m-d'));
+    }
 }

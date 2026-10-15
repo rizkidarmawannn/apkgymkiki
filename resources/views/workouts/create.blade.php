@@ -80,8 +80,13 @@
 
             <div class="form-row flex-gap">
                 <div class="form-group col flex-1">
-                    <label for="date">Tanggal</label>
-                    <input type="date" name="date" id="date" class="form-control" value="{{ isset($activeWorkout->date) ? \Carbon\Carbon::parse($activeWorkout->date)->format('Y-m-d') : ($selectedDate ?? date('Y-m-d')) }}" required>
+                    <div class="flex-between align-center mb-1">
+                        <label for="date" class="m-0">Tanggal</label>
+                        <button type="button" class="btn btn-small btn-outline py-0 px-2" id="set-today-date-btn" style="font-size: 0.75rem; border-radius: 9999px;" title="Ubah tanggal latihan ke hari ini">
+                            📅 Set Hari Ini
+                        </button>
+                    </div>
+                    <input type="date" name="date" id="date" class="form-control" value="{{ $selectedDate ?? (isset($activeWorkout->date) ? \Carbon\Carbon::parse($activeWorkout->date)->format('Y-m-d') : date('Y-m-d')) }}" required>
                 </div>
                 <div class="form-group col flex-1">
                     <label for="duration">Durasi (menit)</label>
@@ -760,6 +765,23 @@
         const workoutIdInput = document.getElementById('workout-id');
         let autosaveTimeout = null;
         let isSaving = false;
+        let isSubmitting = false;
+
+        // "Set Hari Ini" button
+        const setTodayBtn = document.getElementById('set-today-date-btn');
+        if (setTodayBtn) {
+            setTodayBtn.addEventListener('click', function() {
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, '0');
+                const d = String(today.getDate()).padStart(2, '0');
+                const dateInput = document.getElementById('date');
+                if (dateInput) {
+                    dateInput.value = `${y}-${m}-${d}`;
+                    scheduleAutoSave();
+                }
+            });
+        }
 
         function serializeWorkout() {
             const exercises = [];
@@ -803,6 +825,7 @@
         }
 
         function saveLocalBackup() {
+            if (isSubmitting) return;
             try {
                 const data = serializeWorkout();
                 localStorage.setItem('gymtracker_ongoing_workout', JSON.stringify({
@@ -815,13 +838,13 @@
         }
 
         async function triggerAutoSave() {
+            if (isSubmitting || isSaving) return;
             saveLocalBackup();
 
             const data = serializeWorkout();
             // Don't autosave to server if workout has no name and no exercises chosen
             if (!data.name && data.exercises.length === 0) return;
 
-            if (isSaving) return;
             isSaving = true;
 
             if (autosaveStatusEl) {
@@ -843,7 +866,7 @@
 
                 if (res.ok) {
                     const json = await res.json();
-                    if (json.workout_id && workoutIdInput) {
+                    if (json.workout_id && workoutIdInput && !isSubmitting) {
                         workoutIdInput.value = json.workout_id;
                     }
                     if (autosaveStatusEl) {
@@ -863,6 +886,7 @@
         }
 
         function scheduleAutoSave() {
+            if (isSubmitting) return;
             saveLocalBackup();
             clearTimeout(autosaveTimeout);
             autosaveTimeout = setTimeout(triggerAutoSave, 1200);
@@ -874,6 +898,9 @@
             workoutForm.addEventListener('change', scheduleAutoSave);
 
             workoutForm.addEventListener('submit', function() {
+                isSubmitting = true;
+                clearTimeout(autosaveTimeout);
+                if (periodicAutosaveInterval) clearInterval(periodicAutosaveInterval);
                 if (durationSecondsInput) {
                     durationSecondsInput.value = totalSeconds;
                 }
@@ -882,8 +909,8 @@
         }
 
         // Periodic background autosave every 20s
-        setInterval(function() {
-            if (totalSeconds > 0) {
+        const periodicAutosaveInterval = setInterval(function() {
+            if (totalSeconds > 0 && !isSubmitting) {
                 triggerAutoSave();
             }
         }, 20000);
@@ -895,6 +922,9 @@
                 if (!confirm('Yakin ingin membatalkan sesi latihan ini? Semua progres sesi ini akan dihapus.')) {
                     return;
                 }
+                isSubmitting = true;
+                clearTimeout(autosaveTimeout);
+                if (periodicAutosaveInterval) clearInterval(periodicAutosaveInterval);
                 localStorage.removeItem('gymtracker_ongoing_workout');
                 const wId = workoutIdInput ? workoutIdInput.value : '';
                 if (wId) {
@@ -916,13 +946,16 @@
 
         // Save local backup when navigating away or minimizing app
         window.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'hidden') {
+            if (document.visibilityState === 'hidden' && !isSubmitting) {
                 saveLocalBackup();
                 triggerAutoSave();
             }
         });
         window.addEventListener('beforeunload', function() {
-            saveLocalBackup();
+            if (!isSubmitting) {
+                saveLocalBackup();
+            }
+        });
         });
     });
 </script>

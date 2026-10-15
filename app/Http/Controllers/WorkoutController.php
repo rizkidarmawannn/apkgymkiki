@@ -138,9 +138,15 @@ class WorkoutController extends Controller
     {
         $activeWorkout = null;
         if (!$request->has('new')) {
-            $activeWorkout = Workout::where('user_id', Auth::id())
-                ->where('status', 'in_progress')
-                ->with('workoutExercises.exercise')
+            $query = Workout::where('user_id', Auth::id())
+                ->where('status', 'in_progress');
+            
+            // If user clicked a specific date, only match an in-progress workout on that exact date
+            if ($request->filled('date')) {
+                $query->whereDate('date', $request->input('date'));
+            }
+            
+            $activeWorkout = $query->with('workoutExercises.exercise')
                 ->latest('id')
                 ->first();
         }
@@ -178,17 +184,31 @@ class WorkoutController extends Controller
         $workout = null;
 
         if ($workoutId) {
-            $workout = Workout::where('user_id', Auth::id())
+            $existing = Workout::where('user_id', Auth::id())
                 ->where('id', $workoutId)
-                ->where('status', 'in_progress')
                 ->first();
+
+            // If the workout already completed, DO NOT resurrect or create a ghost in_progress workout!
+            if ($existing && $existing->status === 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sesi latihan sudah diselesaikan.',
+                ]);
+            }
+
+            if ($existing && $existing->status === 'in_progress') {
+                $workout = $existing;
+            }
         }
 
-        if (!$workout) {
-            $workout = Workout::where('user_id', Auth::id())
-                ->where('status', 'in_progress')
-                ->latest('id')
-                ->first();
+        // Only search for an in-progress workout if workout_id wasn't provided
+        if (!$workout && empty($workoutId)) {
+            $query = Workout::where('user_id', Auth::id())
+                ->where('status', 'in_progress');
+            if ($request->filled('date')) {
+                $query->whereDate('date', $request->date);
+            }
+            $workout = $query->latest('id')->first();
         }
 
         $durationSecs = (int)($request->duration_seconds ?? 0);
@@ -296,10 +316,12 @@ class WorkoutController extends Controller
             }
 
             if (!$workout) {
-                $workout = Workout::where('user_id', Auth::id())
-                    ->where('status', 'in_progress')
-                    ->latest('id')
-                    ->first();
+                $query = Workout::where('user_id', Auth::id())
+                    ->where('status', 'in_progress');
+                if ($request->filled('date')) {
+                    $query->whereDate('date', $request->date);
+                }
+                $workout = $query->latest('id')->first();
             }
 
             if ($workout) {
