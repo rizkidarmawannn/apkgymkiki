@@ -114,7 +114,10 @@
                 @if(isset($ongoingWorkout) && $ongoingWorkout)
                     <span class="badge badge-warning">Sedang Berjalan</span>
                 @endif
-                <a href="{{ route('workouts.index') }}" class="btn btn-small btn-outline" style="padding: 3px 8px; font-size: 0.8rem;" title="Lihat Kalender Latihan">📅 Kalender</a>
+                <a href="{{ route('workouts.index') }}" class="btn btn-small btn-outline" style="padding: 3px 8px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;" title="Lihat Kalender Latihan">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    <span>Kalender</span>
+                </a>
             </div>
         </div>
         <div class="card-body">

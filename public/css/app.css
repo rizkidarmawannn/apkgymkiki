@@ -284,13 +284,15 @@ input, select, textarea, button {
    3. TOP & BOTTOM NAVIGATION
    ========================================================================== */
 .top-nav {
-    display: none;
+    display: block;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
     position: fixed;
     top: 0;
     width: 100%;
     z-index: 100;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .nav-container {
@@ -310,10 +312,40 @@ input, select, textarea, button {
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
+    text-decoration: none;
 }
 .nav-brand:hover { color: var(--text-primary); }
+
+.nav-brand-logo {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25));
+    transition: transform var(--transition);
+}
+.nav-brand:hover .nav-brand-logo {
+    transform: scale(1.06);
+}
+
+.nav-brand-text {
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.brand-accent {
+    background: linear-gradient(135deg, #f97316 0%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
 
 .nav-links {
     display: flex;
@@ -343,6 +375,23 @@ input, select, textarea, button {
     color: var(--primary);
     background-color: var(--primary-light);
     font-weight: 600;
+}
+
+.nav-svg {
+    width: 17px;
+    height: 17px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+    transition: transform var(--transition), stroke var(--transition);
+}
+
+.nav-link:hover .nav-svg,
+.nav-link.active .nav-svg {
+    stroke: var(--primary);
 }
 
 .nav-icon { font-size: 1rem; }
@@ -400,6 +449,19 @@ input, select, textarea, button {
 .bottom-nav-item.active,
 .bottom-nav-item:hover {
     color: var(--primary);
+}
+
+.bottom-nav-item .nav-svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.bottom-nav-item:hover .nav-svg,
+.bottom-nav-item.active .nav-svg {
+    stroke: var(--primary);
 }
 
 .bottom-nav-icon { font-size: 1.25rem; line-height: 1; }
@@ -776,16 +838,41 @@ select.form-control {
 
 .auth-header {
     text-align: center;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }
 
-.auth-header h1 {
-    font-size: 1.4rem;
-    margin-bottom: 6px;
+.auth-logo-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
 }
 
-.auth-header p {
-    font-size: 0.875rem;
+.auth-logo-img {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 22px;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.auth-logo-img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.auth-header h1,
+.auth-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+}
+
+.auth-header p,
+.auth-subtitle {
+    font-size: 0.85rem;
     color: var(--text-muted);
     margin: 0;
 }
@@ -1084,6 +1171,19 @@ select.form-control {
 /* ==========================================================================
    18. RESPONSIVE
    ========================================================================== */
+@media (max-width: 767px) {
+    .top-nav .nav-links {
+        display: none;
+    }
+    .top-nav .nav-logout {
+        display: none;
+    }
+    .main-content {
+        padding-top: 72px;
+        padding-bottom: 90px;
+    }
+}
+
 @media (min-width: 768px) {
     .top-nav {
         display: block;

@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GymTracker — @yield('title', 'Masuk')</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Gym Kiki — @yield('title', 'Masuk')</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('favicon-64.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('favicon-192.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ time() }}">
     <script>
         (function() {
@@ -28,8 +31,11 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <h1>💪 GymTracker</h1>
-                <p>Pelacak Gym &amp; Kesehatan Pribadimu</p>
+                <div class="auth-logo-box">
+                    <img src="{{ asset('images/logo-badge.png') }}" alt="GYM KIKI APPLICATION" class="auth-logo-img">
+                </div>
+                <h1 class="auth-title">GYM <span class="brand-accent">KIKI</span></h1>
+                <p class="auth-subtitle">Aplikasi Pelacak Gym &amp; Kebugaran</p>
             </div>
             @if($errors->any())
                 <div class="alert alert-error">

@@ -123,7 +123,9 @@
         </a>
     @empty
         <div class="card text-center" style="padding: 40px 24px;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">🏋️</div>
+            <div class="empty-state-icon" style="margin-bottom: 12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px; color: var(--text-muted); margin: 0 auto; display: block;"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
+            </div>
             <h3 class="mb-2">Belum ada latihan selesai</h3>
             <p class="text-muted mb-4">Selesaikan latihanmu untuk melacak riwayat dan progres!</p>
             @if(!isset($ongoingWorkout) || !$ongoingWorkout)
@@ -143,7 +145,10 @@
 <div id="calendar-day-modal" class="modal-overlay">
     <div class="modal-card" style="max-width: 520px;">
         <div class="modal-header flex-between align-center">
-            <h3 class="m-0" id="modal-date-title">📅 Detail Latihan</h3>
+            <h3 class="m-0" id="modal-date-title" style="display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                <span>Detail Latihan</span>
+            </h3>
             <button type="button" class="modal-close-btn" id="close-calendar-modal">&times;</button>
         </div>
         <div class="modal-body" id="modal-workouts-container" style="max-height: 70vh; overflow-y: auto;">

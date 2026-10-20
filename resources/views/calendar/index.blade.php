@@ -5,7 +5,10 @@
 @section('content')
 <div class="page-header flex-between align-center mb-4">
     <div>
-        <h1 class="mb-1">📅 Kalender & Konsistensi</h1>
+        <h1 class="mb-1" style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <span>Kalender & Konsistensi</span>
+        </h1>
         <p class="text-muted text-sm mb-0">Tren latihan tahunan seperti Hevy app dan rekap kehadiran latihanmu.</p>
     </div>
     <div class="d-flex align-center flex-gap-sm">
@@ -155,7 +158,10 @@
 <div id="calendar-day-modal" class="modal-overlay">
     <div class="modal-card" style="max-width: 520px;">
         <div class="modal-header flex-between align-center">
-            <h3 class="m-0" id="modal-date-title">📅 Detail Latihan</h3>
+            <h3 class="m-0" id="modal-date-title" style="display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                <span>Detail Latihan</span>
+            </h3>
             <button type="button" class="modal-close-btn" id="close-calendar-modal">&times;</button>
         </div>
         <div class="modal-body" id="modal-workouts-container" style="max-height: 70vh; overflow-y: auto;">

@@ -75,7 +75,7 @@
 
             <div class="form-group">
                 <label for="workout-name">Nama Latihan</label>
-                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Dumbbell" value="{{ $activeWorkout->name ?? '' }}">
+                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Dumbbell" value="{{ $activeWorkout->name ?? old('name', 'Latihan Kustom') }}">
             </div>
 
             <div class="form-row flex-gap">
@@ -83,7 +83,7 @@
                     <div class="flex-between align-center mb-1">
                         <label for="date" class="m-0">Tanggal</label>
                         <button type="button" class="btn btn-small btn-outline py-0 px-2" id="set-today-date-btn" style="font-size: 0.75rem; border-radius: 9999px;" title="Ubah tanggal latihan ke hari ini">
-                            📅 Set Hari Ini
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; vertical-align: -1px; margin-right: 3px; display: inline-block;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Set Hari Ini
                         </button>
                     </div>
                     <input type="date" name="date" id="date" class="form-control" value="{{ $selectedDate ?? (isset($activeWorkout->date) ? \Carbon\Carbon::parse($activeWorkout->date)->format('Y-m-d') : date('Y-m-d')) }}" required>
@@ -477,8 +477,8 @@
                 typeInput.value = type;
                 if(type !== 'Custom') {
                     nameInput.value = type + ' Workout';
-                } else if(!nameInput.value) {
-                    nameInput.focus();
+                } else if(!nameInput.value || nameInput.value.includes('Workout')) {
+                    nameInput.value = 'Latihan Kustom';
                 }
                 scheduleAutoSave();
             });
@@ -688,10 +688,13 @@
         container.querySelectorAll('.exercise-row').forEach(row => setupExerciseEvents(row));
 
         // Add Exercise Button
+        const initialTemplateRow = container.querySelector('.exercise-row') ? container.querySelector('.exercise-row').cloneNode(true) : null;
+
         if (addBtn) {
             addBtn.addEventListener('click', function() {
                 const exIdx = container.querySelectorAll('.exercise-row').length;
-                const templateRow = container.querySelector('.exercise-row');
+                const templateRow = container.querySelector('.exercise-row') || initialTemplateRow;
+                if (!templateRow) return;
                 const newExRow = templateRow.cloneNode(true);
 
                 newExRow.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
@@ -955,7 +958,6 @@
             if (!isSubmitting) {
                 saveLocalBackup();
             }
-        });
         });
     });
 </script>
