@@ -93,7 +93,9 @@
             @forelse($weightLogs->take(8) ?? [] as $wl)
                 <li class="list-group-item flex-between align-center p-3">
                     <div class="d-flex align-center flex-gap-sm">
-                        <span class="text-muted">📅</span>
+                        <span class="text-muted" style="display: inline-flex; align-items: center;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </span>
                         <strong>{{ \Carbon\Carbon::parse($wl->date)->format('d/m/Y') }}</strong>
                     </div>
                     <span class="badge badge-primary font-semibold" style="font-size: 0.95rem;">

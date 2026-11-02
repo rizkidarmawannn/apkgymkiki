@@ -37,7 +37,7 @@ class RestDayController extends Controller
                 'notes' => $request->notes ?? 'Hari istirahat untuk pemulihan otot',
             ]);
             $isRestDay = true;
-            $message = 'Hari istirahat (Rest Day) aktif. Api streakmu tetap aman! 🛌🔥';
+            $message = 'Hari istirahat (Rest Day) aktif. Api streakmu tetap aman!';
         }
 
         if ($request->wantsJson() || $request->ajax()) {

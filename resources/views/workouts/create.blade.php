@@ -9,17 +9,23 @@
         <p class="text-muted text-sm mb-0">Catat gerakan beban atau kardio. Waktu dan progres tersimpan otomatis.</p>
     </div>
     <div class="d-flex align-center flex-gap-sm flex-wrap">
-        <span id="live-calories-counter" class="badge badge-warning" style="font-size: 0.85rem; font-weight: 700; padding: 6px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
-            🔥 <span id="live-cal-val">{{ $activeWorkout->estimated_calories ?? 0 }}</span> kkal
+        <span id="live-calories-counter" class="badge badge-warning" style="font-size: 0.85rem; font-weight: 700; padding: 6px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); display: inline-flex; align-items: center; gap: 5px;">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px;"><path d="M12 2c-.5 2-3 5-3.5 8.5a5.5 5.5 0 0 0 10.5 3c.5-1.5.5-2.5.5-3.5-1.5 1.5-3 2-4 1.5-2-.8-2.5-3-1.5-5 1-1.5 1-3 0-4.5z"/></svg>
+            <span><span id="live-cal-val">{{ $activeWorkout->estimated_calories ?? 0 }}</span> kkal</span>
         </span>
-        <span id="autosave-status" class="badge badge-secondary" style="font-size: 0.75rem; font-weight: 600; padding: 6px 10px;">
-            ☁️ Tersimpan otomatis
+        <span id="autosave-status" class="badge badge-secondary" style="font-size: 0.75rem; font-weight: 600; padding: 6px 10px; display: inline-flex; align-items: center; gap: 4px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+            <span>Tersimpan otomatis</span>
         </span>
-        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Aktifkan/matikan suara timer">
-            <span id="audio-icon">🔊</span> <span id="audio-label">Suara: ON</span>
+        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Aktifkan/matikan suara timer" style="display: inline-flex; align-items: center; gap: 5px;">
+            <span id="audio-icon" style="display: inline-flex; align-items: center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </span>
+            <span id="audio-label">Suara: ON</span>
         </button>
-        <div class="workout-stopwatch badge badge-primary" id="workout-stopwatch" style="font-size: 0.95rem; font-weight: 700; padding: 6px 14px; border-radius: 9999px;">
-            ⏱️ <span id="stopwatch-display" class="tabular-nums">00:00</span>
+        <div class="workout-stopwatch badge badge-primary" id="workout-stopwatch" style="font-size: 0.95rem; font-weight: 700; padding: 6px 14px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="stopwatch-display" class="tabular-nums">00:00</span>
         </div>
     </div>
 </div>
@@ -27,17 +33,23 @@
 @if(isset($activeWorkout) && $activeWorkout)
     <div class="alert alert-warning mb-4 flex-between align-center" style="border: 1.5px solid var(--warning); background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04));">
         <div>
-            <strong style="color: var(--text-primary);">⚡ Melanjutkan Sesi: {{ $activeWorkout->name }}</strong>
+            <strong style="color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px; color: #f59e0b;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Melanjutkan Sesi: {{ $activeWorkout->name }}</span>
+            </strong>
             <div class="text-sm text-secondary">Progres dan waktu latihanmu otomatis disimpan. Klik "Selesai Latihan & Simpan" setelah seluruh latihan selesai.</div>
         </div>
-        <a href="{{ route('workouts.create', ['new' => 1]) }}" class="btn btn-small btn-outline ml-3" style="white-space: nowrap;" onclick="return confirm('Mulai sesi latihan baru dari awal?');">Mulai Baru</a>
+        <a href="{{ route('workouts.create', ['new' => 1]) }}" class="btn btn-small btn-outline ml-3" style="white-space: nowrap;" id="btn-start-fresh-trigger">Mulai Baru</a>
     </div>
 @endif
 
 <!-- Banner Istirahat -->
 <div id="rest-timer-banner" class="card mb-4 p-3" style="display: none; border: 1px solid var(--warning); background: var(--warning-light);">
     <div class="flex-between align-center mb-2">
-        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">⏳ WAKTU ISTIRAHAT</span>
+        <span class="badge badge-warning" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 5px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>WAKTU ISTIRAHAT</span>
+        </span>
         <div class="rest-preset-btns d-flex flex-gap-sm">
             <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="30">30d</button>
             <button type="button" class="btn btn-small btn-outline set-rest-time" data-seconds="60">60d</button>
@@ -98,8 +110,8 @@
                 <!-- Durasi Otomatis (Tanpa input manual angka yang membingungkan) -->
                 <div class="form-group col flex-1">
                     <label class="mb-1 d-block">Durasi Latihan (Otomatis)</label>
-                    <div class="auto-duration-display-box">
-                        <span class="auto-duration-icon">⏱️</span>
+                    <div class="auto-duration-display-box" style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; color: var(--primary);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         <span id="auto-duration-live" class="tabular-nums fw-bold">00:00</span>
                         <span class="auto-duration-tag">Tercatat Otomatis</span>
                     </div>
@@ -127,6 +139,16 @@
 
         <div id="exercises-container">
             @php
+                $catMap = [
+                    'chest' => 'DADA',
+                    'back' => 'PUNGGUNG',
+                    'shoulders' => 'BAHU',
+                    'arms' => 'LENGAN',
+                    'legs' => 'KAKI',
+                    'core' => 'PERUT / INTI',
+                    'cardio' => 'KARDIO',
+                    'custom' => 'GERAKAN KUSTOM',
+                ];
                 $exercisesList = (isset($activeWorkout) && $activeWorkout->workoutExercises->count() > 0) 
                     ? $activeWorkout->workoutExercises 
                     : null;
@@ -138,34 +160,43 @@
                         $isCardio = strtolower($we->exercise->category ?? '') === 'cardio';
                     @endphp
                     <div class="exercise-block mb-3 {{ $isCardio ? 'exercise-cardio-mode' : '' }}" data-exercise-index="{{ $exIdx }}" data-is-cardio="{{ $isCardio ? '1' : '0' }}">
-                        <div class="exercise-block-header flex-between align-center">
-                            <div class="d-flex align-center flex-gap-sm flex-1">
-                                <span class="exercise-number-pill">#{{ $exIdx + 1 }}</span>
-                                <div class="flex-1">
-                                    <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select" required>
-                                        <option value="">-- Pilih Gerakan / Kardio --</option>
-                                        <option value="custom" {{ ($we->exercise && $we->exercise->category === 'Custom') ? 'selected' : '' }} style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
-                                        @if(isset($exercises))
-                                            @foreach($exercises as $category => $exGrp)
-                                                <optgroup label="── {{ strtoupper($category) }} ──">
-                                                    @foreach($exGrp as $ex)
-                                                        <option value="{{ $ex->id }}" data-category="{{ strtolower($ex->category) }}" {{ $we->exercise_id == $ex->id ? 'selected' : '' }}>
-                                                            {{ $ex->name }} ({{ $ex->muscle }})
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
-                                            @endforeach
-                                        @endif
-                                    </select>
+                        <div class="exercise-block-header">
+                            <div class="exercise-header-top flex-between align-center mb-2">
+                                <div class="d-flex align-center flex-gap-sm">
+                                    <span class="exercise-number-pill">#{{ $exIdx + 1 }}</span>
+                                    <span class="exercise-title-label">Gerakan {{ $exIdx + 1 }}</span>
+                                    <span class="badge exercise-category-badge {{ $isCardio ? 'badge-warning' : 'badge-info' }}">
+                                        {{ $isCardio ? 'KARDIO' : strtoupper($we->exercise->category ?? 'BEBAN') }}
+                                    </span>
                                 </div>
-                            </div>
-                            <div class="d-flex align-center flex-gap-sm ml-2">
-                                <span class="badge exercise-category-badge {{ $isCardio ? 'badge-warning' : 'badge-info' }}">
-                                    {{ $isCardio ? 'KARDIO' : strtoupper($we->exercise->category ?? 'BEBAN') }}
-                                </span>
-                                <button type="button" class="btn-remove-exercise remove-exercise-btn" title="Hapus gerakan ini">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                <button type="button" class="btn btn-small btn-remove-exercise remove-exercise-btn" title="Hapus gerakan ini">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    <span>Hapus</span>
                                 </button>
+                            </div>
+                            <div class="exercise-select-wrapper">
+                                <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select w-100" required>
+                                    <option value="">-- Pilih Gerakan / Kardio --</option>
+                                    <option value="custom" {{ ($we->exercise && $we->exercise->category === 'Custom') ? 'selected' : '' }} style="font-weight: bold; color: var(--primary);">Lainnya / Gerakan Kustom...</option>
+                                    @if(isset($exercises))
+                                        @foreach($exercises as $category => $exGrp)
+                                            @php
+                                                $cKey = strtolower($category);
+                                                $cLabel = $catMap[$cKey] ?? strtoupper($category);
+                                            @endphp
+                                            <optgroup label="── {{ $cLabel }} ──">
+                                                @foreach($exGrp as $ex)
+                                                    @php
+                                                        $mLabel = (!empty($ex->muscle) && strtolower($ex->muscle) !== 'general') ? ' (' . $ex->muscle . ')' : '';
+                                                    @endphp
+                                                    <option value="{{ $ex->id }}" data-category="{{ strtolower($ex->category) }}" {{ $we->exercise_id == $ex->id ? 'selected' : '' }}>
+                                                        {{ $ex->name }}{{ $mLabel }}
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    @endif
+                                </select>
                             </div>
                         </div>
 
@@ -212,8 +243,9 @@
                                                 <input type="number" step="1" min="0" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="{{ $sd['reps'] ?? 10 }}">
                                             @endif
                                         </div>
-                                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                            ▶️ Mulai
+                                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                            <span>Mulai</span>
                                         </button>
                                         <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                                     </div>
@@ -234,32 +266,41 @@
             @else
                 <!-- Initial Clean Exercise Block 1 -->
                 <div class="exercise-block mb-3" data-exercise-index="0" data-is-cardio="0">
-                    <div class="exercise-block-header flex-between align-center">
-                        <div class="d-flex align-center flex-gap-sm flex-1">
-                            <span class="exercise-number-pill">#1</span>
-                            <div class="flex-1">
-                                <select name="exercises[0][exercise_id]" class="form-control exercise-select" required>
-                                    <option value="">-- Pilih Gerakan / Kardio --</option>
-                                    <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
-                                    @if(isset($exercises))
-                                        @foreach($exercises as $category => $exGrp)
-                                            <optgroup label="── {{ strtoupper($category) }} ──">
-                                                @foreach($exGrp as $ex)
-                                                    <option value="{{ $ex->id }}" data-category="{{ strtolower($ex->category) }}">
-                                                        {{ $ex->name }} ({{ $ex->muscle }})
-                                                    </option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
-                                    @endif
-                                </select>
+                    <div class="exercise-block-header">
+                        <div class="exercise-header-top flex-between align-center mb-2">
+                            <div class="d-flex align-center flex-gap-sm">
+                                <span class="exercise-number-pill">#1</span>
+                                <span class="exercise-title-label">Gerakan 1</span>
+                                <span class="badge exercise-category-badge badge-info">BEBAN</span>
                             </div>
-                        </div>
-                        <div class="d-flex align-center flex-gap-sm ml-2">
-                            <span class="badge exercise-category-badge badge-info">BEBAN</span>
-                            <button type="button" class="btn-remove-exercise remove-exercise-btn" title="Hapus gerakan ini">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            <button type="button" class="btn btn-small btn-remove-exercise remove-exercise-btn" title="Hapus gerakan ini">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                <span>Hapus</span>
                             </button>
+                        </div>
+                        <div class="exercise-select-wrapper">
+                            <select name="exercises[0][exercise_id]" class="form-control exercise-select w-100" required>
+                                <option value="">-- Pilih Gerakan / Kardio --</option>
+                                <option value="custom" style="font-weight: bold; color: var(--primary);">Lainnya / Gerakan Kustom...</option>
+                                @if(isset($exercises))
+                                    @foreach($exercises as $category => $exGrp)
+                                        @php
+                                            $cKey = strtolower($category);
+                                            $cLabel = $catMap[$cKey] ?? strtoupper($category);
+                                        @endphp
+                                        <optgroup label="── {{ $cLabel }} ──">
+                                            @foreach($exGrp as $ex)
+                                                @php
+                                                    $mLabel = (!empty($ex->muscle) && strtolower($ex->muscle) !== 'general') ? ' (' . $ex->muscle . ')' : '';
+                                                @endphp
+                                                <option value="{{ $ex->id }}" data-category="{{ strtolower($ex->category) }}">
+                                                    {{ $ex->name }}{{ $mLabel }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                @endif
+                            </select>
                         </div>
                     </div>
 
@@ -288,7 +329,10 @@
                                 <div class="flex-1 field-2-wrap">
                                     <input type="number" step="1" min="0" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                    <span>Mulai</span>
+                                </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                             </div>
                             <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="1">
@@ -299,7 +343,10 @@
                                 <div class="flex-1 field-2-wrap">
                                     <input type="number" step="1" min="0" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                    <span>Mulai</span>
+                                </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                             </div>
                             <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="2">
@@ -310,7 +357,10 @@
                                 <div class="flex-1 field-2-wrap">
                                     <input type="number" step="1" min="0" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                                 </div>
-                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                    <span>Mulai</span>
+                                </button>
                                 <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                             </div>
                         </div>
@@ -338,13 +388,29 @@
                 Batalkan Sesi Latihan
             </button>
             <div class="d-flex align-center flex-gap-sm">
-                <button type="submit" class="btn btn-primary" id="save-workout-btn" style="padding: 10px 24px; font-weight: 700; font-size: 1rem;">
-                    ✓ Selesai Latihan & Simpan
+                <button type="submit" class="btn btn-primary" id="save-workout-btn" style="padding: 10px 24px; font-weight: 700; font-size: 1rem; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Selesai Latihan & Simpan</span>
                 </button>
             </div>
         </div>
     </div>
 </form>
+
+<!-- Custom In-App Modal Batalkan Latihan (Bukan Browser Alert Pop-up) -->
+<div id="discard-confirm-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 420px; text-align: center; padding: 24px;">
+        <div class="mb-3" style="width: 52px; height: 52px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); display: inline-flex; align-items: center; justify-content: center; color: var(--danger); margin: 0 auto;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 26px; height: 26px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h3 class="mb-1" id="discard-modal-title">Batalkan Sesi Latihan?</h3>
+        <p class="text-muted text-sm mb-4" id="discard-modal-desc">Semua data dan set latihan pada sesi ini akan dibatalkan.</p>
+        <div class="d-flex flex-gap-sm">
+            <button type="button" class="btn btn-outline flex-1" id="btn-discard-dismiss">Kembali Latihan</button>
+            <button type="button" class="btn btn-danger flex-1" id="btn-discard-proceed">Ya, Batalkan</button>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
 <script>
@@ -414,7 +480,11 @@
         const audioIcon = document.getElementById('audio-icon');
         const audioLabel = document.getElementById('audio-label');
         function updateAudioUI(isOn) {
-            if (audioIcon) audioIcon.textContent = isOn ? '🔊' : '🔇';
+            if (audioIcon) {
+                audioIcon.innerHTML = isOn 
+                    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>'
+                    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+            }
             if (audioLabel) audioLabel.textContent = isOn ? 'Suara: ON' : 'Suara: OFF';
             if (audioBtn) audioBtn.classList.toggle('muted', !isOn);
         }
@@ -524,7 +594,7 @@
 
                 if (restRemaining <= 0) {
                     clearInterval(restInterval);
-                    restDisplay.textContent = 'ISTIRAHAT SELESAI! 🔔';
+                    restDisplay.textContent = 'ISTIRAHAT SELESAI';
                     GymAudio.playRestCompleteSound();
                     setTimeout(() => {
                         restBanner.style.display = 'none';
@@ -726,18 +796,18 @@
                             this.classList.remove('btn-outline');
                             this.classList.add('btn-warning');
                             setRowSecs = 0;
-                            this.textContent = '⏱️ 0s';
+                            this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>0s</span>';
 
                             setRowInterval = setInterval(() => {
                                 setRowSecs++;
-                                this.textContent = `⏱️ ${setRowSecs}s`;
+                                this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>' + setRowSecs + 's</span>';
                             }, 1000);
                         } else if (status === 'running') {
                             clearInterval(setRowInterval);
                             this.dataset.status = 'done';
                             this.classList.remove('btn-warning');
                             this.classList.add('btn-success');
-                            this.textContent = `✓ ${setRowSecs}s`;
+                            this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 11px; height: 11px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"/></svg><span>' + setRowSecs + 's</span>';
 
                             startRestTimer(60);
                             scheduleAutoSave();
@@ -745,7 +815,7 @@
                             this.dataset.status = 'idle';
                             this.classList.remove('btn-success');
                             this.classList.add('btn-outline');
-                            this.textContent = '▶️ Mulai';
+                            this.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px; margin-right: 4px;"><polygon points="6 3 20 12 6 21 6 3"/></svg><span>Mulai</span>';
                         }
                     });
                 }
@@ -801,7 +871,10 @@
                         <span class="badge badge-secondary set-badge">${isCardio ? 'Sesi ' + (nextSetIdx + 1) : 'Set ' + (nextSetIdx + 1)}</span>
                         <div class="flex-1 field-1-wrap">${field1Html}</div>
                         <div class="flex-1 field-2-wrap">${field2Html}</div>
-                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                            <span>Mulai</span>
+                        </button>
                         <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                     `;
 
@@ -819,6 +892,8 @@
             blocks.forEach((block, exIdx) => {
                 const numPill = block.querySelector('.exercise-number-pill');
                 if (numPill) numPill.textContent = '#' + (exIdx + 1);
+                const titleLbl = block.querySelector('.exercise-title-label');
+                if (titleLbl) titleLbl.textContent = 'Gerakan ' + (exIdx + 1);
                 block.setAttribute('data-exercise-index', exIdx);
 
                 const select = block.querySelector('.exercise-select');
@@ -864,6 +939,8 @@
 
             const numPill = newBlock.querySelector('.exercise-number-pill');
             if (numPill) numPill.textContent = '#' + (exIdx + 1);
+            const titleLbl = newBlock.querySelector('.exercise-title-label');
+            if (titleLbl) titleLbl.textContent = 'Gerakan ' + (exIdx + 1);
 
             const select = newBlock.querySelector('.exercise-select');
             if (select) select.selectedIndex = 0;
@@ -902,7 +979,10 @@
                     <div class="flex-1 field-2-wrap">
                         <input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                        <span>Mulai</span>
+                    </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                 </div>
                 <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="1">
@@ -913,7 +993,10 @@
                     <div class="flex-1 field-2-wrap">
                         <input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                        <span>Mulai</span>
+                    </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                 </div>
                 <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="2">
@@ -924,7 +1007,10 @@
                     <div class="flex-1 field-2-wrap">
                         <input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                        <span>Mulai</span>
+                    </button>
                     <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                 </div>
             `;
@@ -1040,7 +1126,7 @@
             isSaving = true;
 
             if (autosaveStatusEl) {
-                autosaveStatusEl.textContent = '🔄 Menyimpan...';
+                autosaveStatusEl.textContent = 'Menyimpan...';
                 autosaveStatusEl.className = 'badge badge-warning';
             }
 
@@ -1065,14 +1151,14 @@
                         liveCalVal.textContent = json.estimated_calories;
                     }
                     if (autosaveStatusEl) {
-                        autosaveStatusEl.textContent = `☁️ Tersimpan (${json.saved_at || 'otomatis'})`;
+                        autosaveStatusEl.textContent = `Tersimpan (${json.saved_at || 'otomatis'})`;
                         autosaveStatusEl.className = 'badge badge-secondary';
                     }
                 }
             } catch (err) {
                 console.warn('AutoSave background sync:', err);
                 if (autosaveStatusEl) {
-                    autosaveStatusEl.textContent = '💾 Tersimpan lokal';
+                    autosaveStatusEl.textContent = 'Tersimpan lokal';
                     autosaveStatusEl.className = 'badge badge-secondary';
                 }
             } finally {
@@ -1119,15 +1205,54 @@
         }, 20000);
 
         const discardBtn = document.getElementById('discard-workout-btn');
-        if (discardBtn) {
+        const discardModal = document.getElementById('discard-confirm-modal');
+        const discardProceedBtn = document.getElementById('btn-discard-proceed');
+        const discardDismissBtn = document.getElementById('btn-discard-dismiss');
+        let discardTargetAction = 'cancel'; // 'cancel' or 'start_fresh'
+
+        if (discardBtn && discardModal) {
             discardBtn.addEventListener('click', function() {
-                if (!confirm('Yakin ingin membatalkan sesi latihan ini? Semua progres sesi ini akan dihapus.')) {
-                    return;
-                }
+                discardTargetAction = 'cancel';
+                const titleEl = document.getElementById('discard-modal-title');
+                const descEl = document.getElementById('discard-modal-desc');
+                if (titleEl) titleEl.textContent = 'Batalkan Sesi Latihan?';
+                if (descEl) descEl.textContent = 'Semua data dan set latihan pada sesi ini akan dibatalkan.';
+                discardModal.classList.add('active');
+            });
+        }
+
+        const startFreshBtn = document.getElementById('btn-start-fresh-trigger');
+        if (startFreshBtn && discardModal) {
+            startFreshBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                discardTargetAction = 'start_fresh';
+                const titleEl = document.getElementById('discard-modal-title');
+                const descEl = document.getElementById('discard-modal-desc');
+                if (titleEl) titleEl.textContent = 'Mulai Sesi Baru dari Awal?';
+                if (descEl) descEl.textContent = 'Sesi latihan yang sedang berjalan ini akan direset dan diganti latihan baru.';
+                discardModal.classList.add('active');
+            });
+        }
+
+        if (discardDismissBtn && discardModal) {
+            discardDismissBtn.addEventListener('click', () => discardModal.classList.remove('active'));
+            discardModal.addEventListener('click', (e) => {
+                if (e.target === discardModal) discardModal.classList.remove('active');
+            });
+        }
+
+        if (discardProceedBtn) {
+            discardProceedBtn.addEventListener('click', function() {
                 isSubmitting = true;
                 clearTimeout(autosaveTimeout);
                 if (periodicAutosaveInterval) clearInterval(periodicAutosaveInterval);
                 localStorage.removeItem('gymtracker_ongoing_workout');
+
+                if (discardTargetAction === 'start_fresh') {
+                    window.location.href = '{{ route('workouts.create', ['new' => 1]) }}';
+                    return;
+                }
+
                 const wId = workoutIdInput ? workoutIdInput.value : '';
                 if (wId) {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

@@ -2365,7 +2365,7 @@ select.form-control {
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
-    transition: border-color var(--transition);
+    transition: all var(--transition);
 }
 
 .exercise-block:focus-within {
@@ -2374,8 +2374,41 @@ select.form-control {
 
 .exercise-block-header {
     background: var(--bg-hover);
-    padding: 10px 14px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--border-light);
+}
+
+.exercise-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.exercise-title-label {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text-primary);
+}
+
+.exercise-select-wrapper {
+    width: 100%;
+    min-width: 0;
+}
+
+.exercise-select-wrapper .exercise-select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 42px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-radius: var(--r-md);
+    background-color: var(--bg-card);
 }
 
 .exercise-number-pill {
@@ -2399,22 +2432,28 @@ select.form-control {
     padding: 3px 8px;
 }
 
-.btn-remove-exercise {
-    background: none;
-    border: none;
-    color: var(--text-muted);
+.btn-remove-exercise,
+.btn-danger-subtle {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
     cursor: pointer;
-    padding: 4px;
-    border-radius: var(--r-sm);
+    padding: 5px 12px;
+    border-radius: var(--r-md);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
     transition: all 0.15s ease;
 }
 
-.btn-remove-exercise:hover {
-    color: var(--danger);
-    background: rgba(239, 68, 68, 0.1);
+.btn-remove-exercise:hover,
+.btn-danger-subtle:hover {
+    color: #ffffff;
+    background: #ef4444;
+    border-color: #ef4444;
 }
 
 .exercise-sets-area {

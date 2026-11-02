@@ -11,7 +11,10 @@
     @if(isset($ongoingWorkout) && $ongoingWorkout)
         <div class="d-flex flex-gap-sm">
             <a href="{{ route('workouts.create', ['new' => 1]) }}" class="btn btn-outline btn-small">+ Sesi Baru</a>
-            <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning btn-small" style="font-weight: 700;">▶️ Lanjutkan Latihan</a>
+            <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning btn-small" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                <span>Lanjutkan Latihan</span>
+            </a>
         </div>
     @else
         <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Mulai Latihan</a>
@@ -22,7 +25,10 @@
     <div class="card mb-4 p-3" style="border: 2px solid var(--warning); background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.02));">
         <div class="flex-between align-center mb-2">
             <div class="d-flex align-center flex-gap-sm">
-                <span class="badge badge-warning" style="font-weight: 700; font-size: 0.8rem; letter-spacing: 0.04em;">⚡ SEDANG BERJALAN</span>
+                <span class="badge badge-warning" style="font-weight: 700; font-size: 0.8rem; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span>SEDANG BERJALAN</span>
+                </span>
                 <span class="text-sm text-muted">{{ \Carbon\Carbon::parse($ongoingWorkout->date)->format('d/m/Y') }}</span>
             </div>
             <form action="{{ route('workouts.cancel', $ongoingWorkout) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan sesi latihan ini?');" class="m-0">
@@ -40,8 +46,9 @@
             <span class="text-xs text-muted">Progres tersimpan &bull; Siap dilanjutkan</span>
         </div>
         <div>
-            <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning btn-block text-center" style="font-weight: 700; font-size: 1rem; padding: 10px;">
-                ▶️ Lanjutkan Latihan Ini
+            <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning btn-block text-center" style="font-weight: 700; font-size: 1rem; padding: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                <span>Lanjutkan Latihan Ini</span>
             </a>
         </div>
     </div>
@@ -59,8 +66,9 @@
             <button type="button" class="calendar-nav-btn" id="today-month-btn" style="font-size: 0.8rem; font-weight: 600;">Hari Ini</button>
         </div>
         <div>
-            <span class="badge badge-success" id="monthly-count-pill" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
-                🔥 <span id="monthly-count-number">{{ $calendarData['total_completed'] ?? 0 }}</span> Hari Latihan Bulan Ini
+            <span class="badge badge-success" id="monthly-count-pill" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px;"><path d="M12 2c-.5 2-3 5-3.5 8.5a5.5 5.5 0 0 0 10.5 3c.5-1.5.5-2.5.5-3.5-1.5 1.5-3 2-4 1.5-2-.8-2.5-3-1.5-5 1-1.5 1-3 0-4.5z"/></svg>
+                <span><span id="monthly-count-number">{{ $calendarData['total_completed'] ?? 0 }}</span> Hari Latihan Bulan Ini</span>
             </span>
         </div>
     </div>
@@ -243,9 +251,9 @@
                 // Konten isi cell
                 let indicatorHtml = '';
                 if (hasCompleted) {
-                    indicatorHtml = `<span class="day-badge-icon" title="${dayWorkouts.length} latihan">🏋️</span>`;
+                    indicatorHtml = `<span class="day-badge-icon" title="${dayWorkouts.length} latihan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px; color: #38bdf8;"><line x1="2" y1="12" x2="22" y2="12"/><line x1="6" y1="7" x2="6" y2="17"/><line x1="4" y1="9" x2="4" y2="15"/><line x1="18" y1="7" x2="18" y2="17"/><line x1="20" y1="9" x2="20" y2="15"/></svg></span>`;
                 } else if (hasOngoing) {
-                    indicatorHtml = `<span class="day-badge-icon" title="Sedang berjalan">⚡</span>`;
+                    indicatorHtml = `<span class="day-badge-icon" title="Sedang berjalan"><svg viewBox="0 0 24 24" fill="currentColor" style="width: 13px; height: 13px; color: #f59e0b;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>`;
                 }
 
                 cell.innerHTML = `
@@ -330,7 +338,7 @@
             });
 
             if (modalDateTitle) {
-                modalDateTitle.textContent = `📅 ${formattedDate}`;
+                modalDateTitle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg><span>${formattedDate}</span>`;
             }
 
             if (!modalContainer) return;
@@ -345,14 +353,14 @@
                         <div class="calendar-workout-item">
                             <div class="flex-between align-center mb-2">
                                 <h4 class="m-0 text-primary" style="font-size: 1.05rem;">${w.name}</h4>
-                                <span class="badge badge-${isDone ? 'success' : 'warning'}">
-                                    ${isDone ? '✓ Selesai' : '⚡ Sedang Berjalan'}
+                                <span class="badge badge-${isDone ? 'success' : 'warning'}" style="display: inline-flex; align-items: center; gap: 4px;">
+                                    ${isDone ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 12px; height: 12px;"><polyline points="20 6 9 17 4 12"/></svg><span>Selesai</span>' : '<svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>Sedang Berjalan</span>'}
                                 </span>
                             </div>
 
                             <div class="workout-meta mb-2">
                                 <span class="badge badge-info">${w.exercise_count} gerakan</span>
-                                ${w.duration ? `<span class="badge badge-secondary">⏱️ ${w.duration} menit</span>` : ''}
+                                ${w.duration ? `<span class="badge badge-secondary" style="display: inline-flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 11px; height: 11px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>${w.duration} menit</span></span>` : ''}
                             </div>
 
                             ${w.exercises && w.exercises.length > 0 ? `
@@ -372,7 +380,10 @@
                                 ${isDone ? `
                                     <a href="${w.url}" class="btn btn-small btn-primary flex-1 text-center">Lihat Detail Lengkap →</a>
                                 ` : `
-                                    <a href="${w.resume_url}" class="btn btn-small btn-warning flex-1 text-center" style="font-weight: 700;">▶️ Lanjutkan Latihan Ini</a>
+                                    <a href="${w.resume_url}" class="btn btn-small btn-warning flex-1 text-center" style="font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 11px; height: 11px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                        <span>Lanjutkan Latihan Ini</span>
+                                    </a>
                                 `}
                             </div>
                         </div>
@@ -389,7 +400,9 @@
             } else {
                 modalContainer.innerHTML = `
                     <div class="text-center py-4">
-                        <div style="font-size: 2.8rem; margin-bottom: 12px;">🛋️</div>
+                        <div class="mb-3" style="width: 54px; height: 54px; border-radius: 50%; background: var(--bg-hover); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); margin: 0 auto;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 26px; height: 26px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </div>
                         <h4 class="mb-1">Belum Ada Latihan</h4>
                         <p class="text-muted text-sm mb-4">Tidak ada sesi latihan yang dicatat pada ${formattedDate}.</p>
                         <a href="{{ route('workouts.create') }}?date=${dateStr}&new=1" class="btn btn-primary btn-small">

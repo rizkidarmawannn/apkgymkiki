@@ -26,8 +26,10 @@
 </head>
 <body class="auth-body">
     <div style="position: absolute; top: 16px; right: 16px;">
-        <button type="button" class="btn-theme-toggle" id="auth-theme-toggle" title="Ganti Mode Gelap/Terang">
-            <span id="auth-theme-icon">🌙</span>
+        <button type="button" class="btn-theme-toggle" id="auth-theme-toggle" title="Ganti Mode Gelap/Terang" style="display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer;">
+            <span id="auth-theme-icon" style="display: inline-flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </span>
         </button>
     </div>
     <div class="auth-container">
@@ -56,7 +58,11 @@
             if (!toggleBtn || !icon) return;
 
             function updateIcon(theme) {
-                icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                if (theme === 'dark') {
+                    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+                } else {
+                    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+                }
             }
 
             const current = document.documentElement.getAttribute('data-theme') || 'light';

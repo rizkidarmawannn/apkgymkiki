@@ -90,11 +90,11 @@ class StreakService
             $bestStreak = $currentStreak;
         }
 
-        // 6. Milestone Flame Tiers: 1-9 (orange), 10-49 (blue), 50-99 (plasma purple), 100+ (golden apex)
+        // 6. Milestone Flame Tiers: 0 (padam), 1-9 (orange), 10-49 (blue), 50-99 (plasma purple), 100+ (golden apex)
         $flameTier = 0;
         $flameLevel = 'cold';
-        $flameTitle = 'Api Belum Menyala';
-        $flameEmoji = '🕯️';
+        $flameTitle = 'Api Padam';
+        $flameEmoji = ''; // No emojis! Uses custom SVG shape
         $flameColor = '#64748b';
         $nextMilestone = 10;
         $prevMilestone = 0;
@@ -102,8 +102,7 @@ class StreakService
         if ($currentStreak === 0) {
             $flameTier = 0;
             $flameLevel = 'cold';
-            $flameTitle = 'Api Belum Menyala';
-            $flameEmoji = '🕯️';
+            $flameTitle = 'Api Padam';
             $flameColor = '#64748b';
             $nextMilestone = 10;
             $prevMilestone = 0;
@@ -111,7 +110,6 @@ class StreakService
             $flameTier = 1;
             $flameLevel = 'warm';
             $flameTitle = 'Api Membara';
-            $flameEmoji = '🔥';
             $flameColor = '#f97316';
             $nextMilestone = 10;
             $prevMilestone = 1;
@@ -119,7 +117,6 @@ class StreakService
             $flameTier = 2;
             $flameLevel = 'blue';
             $flameTitle = 'Api Biru 10+ Hari';
-            $flameEmoji = '⚡🔥';
             $flameColor = '#06b6d4';
             $nextMilestone = 50;
             $prevMilestone = 10;
@@ -127,7 +124,6 @@ class StreakService
             $flameTier = 3;
             $flameLevel = 'plasma';
             $flameTitle = 'Api Plasma 50+ Hari';
-            $flameEmoji = '🟣🔥';
             $flameColor = '#a855f7';
             $nextMilestone = 100;
             $prevMilestone = 50;
@@ -135,7 +131,6 @@ class StreakService
             $flameTier = 4;
             $flameLevel = 'godlike';
             $flameTitle = 'Api Emas Mahkota 100+ Hari';
-            $flameEmoji = '👑🔥';
             $flameColor = '#eab308';
             $nextMilestone = 200;
             $prevMilestone = 100;
@@ -145,7 +140,7 @@ class StreakService
         $currentProgress = min(100, max(0, round((($currentStreak - $prevMilestone) / $milestoneDiff) * 100)));
         $daysToMilestone = max(0, $nextMilestone - $currentStreak);
 
-        // 7. Weekly schedule dots (Sen - Min of current week)
+        // 7. Weekly schedule indicators (Sen - Min of current week)
         $startOfWeek = Carbon::now()->startOfWeek();
         $weekDays = [];
         for ($i = 0; $i < 7; $i++) {

@@ -67,7 +67,9 @@
             <div class="d-flex align-center flex-gap-sm">
                 @if(isset($streakData))
                     <a href="{{ route('dashboard') }}#streak-section" class="streak-pill streak-pill-{{ $streakData['status'] }}" title="Streak Konsistensi: {{ $streakData['current_streak'] }} Hari ({{ $streakData['flame_title'] }})">
-                        <span class="streak-flame-icon">{{ $streakData['status'] === 'extinguished' ? '🕯️' : '🔥' }}</span>
+                        <span class="streak-flame-icon" style="display: inline-flex; align-items: center;">
+                            <x-flame-shape :tier="$streakData['flame_tier'] ?? 0" :status="$streakData['status'] ?? 'extinguished'" size="16" />
+                        </span>
                         <span class="streak-count">{{ $streakData['current_streak'] }}</span>
                     </a>
                 @endif
@@ -102,10 +104,16 @@
                         <div class="capsule-subtext">
                             <span>{{ $activeWorkout->workoutExercises->count() }} gerakan</span>
                             <span class="bullet-sep">&bull;</span>
-                            <span>⏱️ {{ $activeWorkout->duration ? $activeWorkout->duration . ' mnt' : 'Sesi aktif' }}</span>
+                            <span style="display: inline-flex; align-items: center; gap: 3px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span>{{ $activeWorkout->duration ? $activeWorkout->duration . ' mnt' : 'Sesi aktif' }}</span>
+                            </span>
                             @if($activeWorkout->estimated_calories)
                                 <span class="bullet-sep">&bull;</span>
-                                <span>🔥 ~{{ $activeWorkout->estimated_calories }} kkal</span>
+                                <span style="display: inline-flex; align-items: center; gap: 3px;">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px; color: #f97316;"><path d="M12 2c-.5 2-3 5-3.5 8.5a5.5 5.5 0 0 0 10.5 3c.5-1.5.5-2.5.5-3.5-1.5 1.5-3 2-4 1.5-2-.8-2.5-3-1.5-5 1-1.5 1-3 0-4.5z"/></svg>
+                                    <span>~{{ $activeWorkout->estimated_calories }} kkal</span>
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -181,23 +189,27 @@
             <div class="modal-body">
                 <!-- Group 1: Mode Tema (Gelap / Terang) -->
                 <div class="settings-group">
-                    <div class="settings-title">
-                        <span>🌓</span> <span data-i18n="settings_mode">Mode Tampilan</span>
+                    <div class="settings-title" style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+                        <span data-i18n="settings_mode">Mode Tampilan</span>
                     </div>
                     <div class="segmented-control">
-                        <button type="button" class="segmented-btn" data-theme-val="light" id="theme-btn-light">
-                            <span>☀️</span> <span data-i18n="settings_light">Terang</span>
+                        <button type="button" class="segmented-btn" data-theme-val="light" id="theme-btn-light" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            <span data-i18n="settings_light">Terang</span>
                         </button>
-                        <button type="button" class="segmented-btn" data-theme-val="dark" id="theme-btn-dark">
-                            <span>🌙</span> <span data-i18n="settings_dark">Gelap</span>
+                        <button type="button" class="segmented-btn" data-theme-val="dark" id="theme-btn-dark" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                            <span data-i18n="settings_dark">Gelap</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Group 2: Pilihan Warna Tema -->
                 <div class="settings-group">
-                    <div class="settings-title">
-                        <span>🎨</span> <span data-i18n="settings_color">Warna Aksen</span>
+                    <div class="settings-title" style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.68 1.5-1.5 0-.38-.15-.74-.42-1.01-.27-.27-.43-.63-.43-1.02 0-.93.75-1.68 1.68-1.68H16c3.31 0 6-2.69 6-6 0-5.5-4.5-9.79-10-9.79z"/></svg>
+                        <span data-i18n="settings_color">Warna Aksen</span>
                     </div>
                     <div class="color-picker-grid">
                         <button type="button" class="color-swatch-btn" data-color-val="blue">
@@ -225,15 +237,18 @@
 
                 <!-- Group 3: Pilihan Bahasa -->
                 <div class="settings-group">
-                    <div class="settings-title">
-                        <span>🌐</span> <span data-i18n="settings_lang">Bahasa / Language</span>
+                    <div class="settings-title" style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <span data-i18n="settings_lang">Bahasa / Language</span>
                     </div>
                     <div class="language-control">
-                        <button type="button" class="segmented-btn" data-lang-val="id" id="lang-btn-id">
-                            <span>🇮🇩</span> <span>Indonesia</span>
+                        <button type="button" class="segmented-btn" data-lang-val="id" id="lang-btn-id" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span class="lang-flag-tag" style="font-weight: 800; font-size: 0.72rem; padding: 2px 5px; border-radius: 4px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">ID</span>
+                            <span>Indonesia</span>
                         </button>
-                        <button type="button" class="segmented-btn" data-lang-val="en" id="lang-btn-en">
-                            <span>🇬🇧</span> <span>English</span>
+                        <button type="button" class="segmented-btn" data-lang-val="en" id="lang-btn-en" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span class="lang-flag-tag" style="font-weight: 800; font-size: 0.72rem; padding: 2px 5px; border-radius: 4px; background: rgba(37, 99, 235, 0.15); color: #3b82f6; border: 1px solid rgba(37, 99, 235, 0.3);">EN</span>
+                            <span>English</span>
                         </button>
                     </div>
                 </div>
@@ -253,7 +268,7 @@
                 nav_profile: "Profil",
                 nav_settings: "Pengaturan",
                 nav_logout: "Keluar",
-                settings_title: "⚙️ Pengaturan Tampilan",
+                settings_title: "Pengaturan Tampilan",
                 settings_mode: "Mode Tampilan",
                 settings_light: "Terang",
                 settings_dark: "Gelap",
@@ -269,7 +284,7 @@
                 nav_profile: "Profile",
                 nav_settings: "Settings",
                 nav_logout: "Logout",
-                settings_title: "⚙️ Appearance & Language",
+                settings_title: "Appearance & Language",
                 settings_mode: "Theme Mode",
                 settings_light: "Light",
                 settings_dark: "Dark",

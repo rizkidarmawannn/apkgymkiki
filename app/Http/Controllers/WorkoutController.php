@@ -419,7 +419,7 @@ class WorkoutController extends Controller
             return $workout;
         });
 
-        return redirect()->route('workouts.show', $workout)->with('success', 'Latihan selesai dan berhasil disimpan! 💪 Total estimasi kalori terbakar: ' . $estimatedCalories . ' kkal');
+        return redirect()->route('workouts.show', $workout)->with('success', 'Latihan selesai dan berhasil disimpan! Total estimasi kalori terbakar: ' . $estimatedCalories . ' kkal');
     }
 
     public function cancel(Workout $workout)
