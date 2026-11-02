@@ -174,8 +174,32 @@
                                     <span>Hapus</span>
                                 </button>
                             </div>
-                            <div class="exercise-select-wrapper">
-                                <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select w-100" required>
+                            <div class="exercise-select-wrapper custom-select-wrapper">
+                                <label class="custom-select-label">Pilih Gerakan / Kardio</label>
+                                <div class="custom-select-trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                                    <span class="custom-select-label-text {{ $we->exercise_id ? '' : 'placeholder' }}">
+                                        @if($we->exercise)
+                                            @if($we->exercise->category === 'Custom')
+                                                Lainnya / Gerakan Kustom...
+                                            @else
+                                                {{ $we->exercise->name }}{{ (!empty($we->exercise->muscle) && strtolower($we->exercise->muscle) !== 'general') ? ' (' . $we->exercise->muscle . ')' : '' }}
+                                            @endif
+                                        @else
+                                            -- Pilih Gerakan / Kardio --
+                                        @endif
+                                    </span>
+                                    <svg class="custom-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="custom-select-menu" role="listbox">
+                                    <div class="custom-select-search-wrap">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="custom-select-search-icon" style="width: 14px; height: 14px; color: var(--text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                        <input type="text" class="custom-select-search-input" placeholder="Cari nama gerakan..." autocomplete="off">
+                                    </div>
+                                    <div class="custom-select-options-list"></div>
+                                </div>
+                                <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select exercise-select-native" required>
                                     <option value="">-- Pilih Gerakan / Kardio --</option>
                                     <option value="custom" {{ ($we->exercise && $we->exercise->category === 'Custom') ? 'selected' : '' }} style="font-weight: bold; color: var(--primary);">Lainnya / Gerakan Kustom...</option>
                                     @if(isset($exercises))
@@ -278,8 +302,22 @@
                                 <span>Hapus</span>
                             </button>
                         </div>
-                        <div class="exercise-select-wrapper">
-                            <select name="exercises[0][exercise_id]" class="form-control exercise-select w-100" required>
+                        <div class="exercise-select-wrapper custom-select-wrapper">
+                            <label class="custom-select-label">Pilih Gerakan / Kardio</label>
+                            <div class="custom-select-trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                                <span class="custom-select-label-text placeholder">-- Pilih Gerakan / Kardio --</span>
+                                <svg class="custom-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="custom-select-menu" role="listbox">
+                                <div class="custom-select-search-wrap">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="custom-select-search-icon" style="width: 14px; height: 14px; color: var(--text-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    <input type="text" class="custom-select-search-input" placeholder="Cari nama gerakan..." autocomplete="off">
+                                </div>
+                                <div class="custom-select-options-list"></div>
+                            </div>
+                            <select name="exercises[0][exercise_id]" class="form-control exercise-select exercise-select-native" required>
                                 <option value="">-- Pilih Gerakan / Kardio --</option>
                                 <option value="custom" style="font-weight: bold; color: var(--primary);">Lainnya / Gerakan Kustom...</option>
                                 @if(isset($exercises))
@@ -642,7 +680,230 @@
         const addBtn = document.getElementById('add-exercise-btn');
         const addBottomBtn = document.getElementById('add-exercise-bottom-btn');
 
+        function setupCustomDropdown(block) {
+            const wrapper = block.querySelector('.custom-select-wrapper');
+            if (!wrapper) return;
+
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            const labelText = wrapper.querySelector('.custom-select-label-text');
+            const searchInput = wrapper.querySelector('.custom-select-search-input');
+            const optionsList = wrapper.querySelector('.custom-select-options-list');
+            const nativeSelect = wrapper.querySelector('.exercise-select');
+
+            if (!trigger || !optionsList || !nativeSelect) return;
+
+            function populateOptions() {
+                optionsList.innerHTML = '';
+
+                Array.from(nativeSelect.children).forEach(child => {
+                    const tag = child.tagName.toLowerCase();
+                    if (tag === 'option') {
+                        if (!child.value) {
+                            const item = document.createElement('div');
+                            item.className = 'custom-select-item' + (!nativeSelect.value ? ' is-selected' : '');
+                            item.setAttribute('data-value', '');
+                            item.innerHTML = `<span class="custom-select-item-title" style="color: var(--text-muted);">${child.textContent.trim()}</span>`;
+                            item.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                selectOption('', child.textContent.trim());
+                            });
+                            optionsList.appendChild(item);
+                        } else {
+                            const item = createOptionItem(child);
+                            optionsList.appendChild(item);
+                        }
+                    } else if (tag === 'optgroup') {
+                        const grpDiv = document.createElement('div');
+                        grpDiv.className = 'custom-select-group';
+
+                        const grpTitle = document.createElement('div');
+                        grpTitle.className = 'custom-select-group-title';
+                        grpTitle.textContent = child.label.replace(/^──\s*|\s*──$/g, '');
+                        grpDiv.appendChild(grpTitle);
+
+                        Array.from(child.children).forEach(opt => {
+                            grpDiv.appendChild(createOptionItem(opt));
+                        });
+
+                        optionsList.appendChild(grpDiv);
+                    }
+                });
+            }
+
+            function createOptionItem(opt) {
+                const item = document.createElement('div');
+                item.className = 'custom-select-item' + (nativeSelect.value === opt.value ? ' is-selected' : '');
+                item.setAttribute('data-value', opt.value);
+                const cat = (opt.getAttribute('data-category') || '').toLowerCase();
+                item.setAttribute('data-category', cat);
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'custom-select-item-title';
+                titleSpan.textContent = opt.textContent.trim();
+                item.appendChild(titleSpan);
+
+                if (opt.value === 'custom') {
+                    const badge = document.createElement('span');
+                    badge.className = 'custom-select-item-badge badge-strength';
+                    badge.textContent = 'Kustom';
+                    item.appendChild(badge);
+                } else if (cat === 'cardio' || cardioIds.includes(parseInt(opt.value))) {
+                    const badge = document.createElement('span');
+                    badge.className = 'custom-select-item-badge badge-cardio';
+                    badge.textContent = 'Kardio';
+                    item.appendChild(badge);
+                }
+
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectOption(opt.value, opt.textContent.trim());
+                });
+
+                return item;
+            }
+
+            function selectOption(val, text) {
+                nativeSelect.value = val;
+
+                if (!val) {
+                    labelText.textContent = '-- Pilih Gerakan / Kardio --';
+                    labelText.classList.add('placeholder');
+                } else {
+                    labelText.textContent = text;
+                    labelText.classList.remove('placeholder');
+                }
+
+                optionsList.querySelectorAll('.custom-select-item').forEach(it => {
+                    it.classList.toggle('is-selected', it.getAttribute('data-value') === val);
+                });
+
+                closeDropdown();
+                nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function openDropdown() {
+                document.querySelectorAll('.custom-select-wrapper.is-open').forEach(w => {
+                    if (w !== wrapper) {
+                        w.classList.remove('is-open');
+                        const trig = w.querySelector('.custom-select-trigger');
+                        if (trig) trig.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                wrapper.classList.add('is-open');
+                trigger.setAttribute('aria-expanded', 'true');
+                if (searchInput) {
+                    searchInput.value = '';
+                    filterOptions('');
+                    setTimeout(() => searchInput.focus(), 60);
+                }
+            }
+
+            function closeDropdown() {
+                wrapper.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+
+            function toggleDropdown(e) {
+                e.stopPropagation();
+                if (wrapper.classList.contains('is-open')) {
+                    closeDropdown();
+                } else {
+                    openDropdown();
+                }
+            }
+
+            function filterOptions(query) {
+                const q = query.trim().toLowerCase();
+                let hasAny = false;
+
+                optionsList.querySelectorAll('.custom-select-group').forEach(grp => {
+                    let grpHasVisible = false;
+                    grp.querySelectorAll('.custom-select-item').forEach(item => {
+                        const txt = item.textContent.toLowerCase();
+                        if (!q || txt.includes(q)) {
+                            item.style.display = 'flex';
+                            grpHasVisible = true;
+                            hasAny = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    grp.style.display = grpHasVisible ? 'block' : 'none';
+                });
+
+                optionsList.querySelectorAll(':scope > .custom-select-item').forEach(item => {
+                    const txt = item.textContent.toLowerCase();
+                    if (!q || txt.includes(q)) {
+                        item.style.display = 'flex';
+                        hasAny = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                let emptyEl = optionsList.querySelector('.custom-select-empty');
+                if (!hasAny) {
+                    if (!emptyEl) {
+                        emptyEl = document.createElement('div');
+                        emptyEl.className = 'custom-select-empty';
+                        emptyEl.textContent = 'Gerakan tidak ditemukan';
+                        optionsList.appendChild(emptyEl);
+                    }
+                    emptyEl.style.display = 'block';
+                } else if (emptyEl) {
+                    emptyEl.style.display = 'none';
+                }
+            }
+
+            trigger.onclick = toggleDropdown;
+            trigger.onkeydown = function(e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    openDropdown();
+                }
+            };
+
+            if (searchInput) {
+                searchInput.onclick = (e) => e.stopPropagation();
+                searchInput.oninput = (e) => filterOptions(e.target.value);
+                searchInput.onkeydown = (e) => {
+                    if (e.key === 'Escape') {
+                        closeDropdown();
+                        trigger.focus();
+                    }
+                };
+            }
+
+            nativeSelect.addEventListener('change', function() {
+                const selectedOpt = nativeSelect.options[nativeSelect.selectedIndex];
+                if (selectedOpt && selectedOpt.value) {
+                    labelText.textContent = selectedOpt.textContent.trim();
+                    labelText.classList.remove('placeholder');
+                } else {
+                    labelText.textContent = '-- Pilih Gerakan / Kardio --';
+                    labelText.classList.add('placeholder');
+                }
+                optionsList.querySelectorAll('.custom-select-item').forEach(it => {
+                    it.classList.toggle('is-selected', it.getAttribute('data-value') === nativeSelect.value);
+                });
+            });
+
+            populateOptions();
+
+            const initialOpt = nativeSelect.options[nativeSelect.selectedIndex];
+            if (initialOpt && initialOpt.value) {
+                labelText.textContent = initialOpt.textContent.trim();
+                labelText.classList.remove('placeholder');
+            } else {
+                labelText.textContent = '-- Pilih Gerakan / Kardio --';
+                labelText.classList.add('placeholder');
+            }
+        }
+
         function setupExerciseEvents(block) {
+            setupCustomDropdown(block);
+
             const select = block.querySelector('.exercise-select');
             const customWrapper = block.querySelector('.custom-name-wrapper');
             const customInput = block.querySelector('.custom-name-input');
@@ -944,6 +1205,20 @@
 
             const select = newBlock.querySelector('.exercise-select');
             if (select) select.selectedIndex = 0;
+
+            const customWrap = newBlock.querySelector('.custom-select-wrapper');
+            if (customWrap) {
+                customWrap.classList.remove('is-open');
+                const trig = customWrap.querySelector('.custom-select-trigger');
+                if (trig) trig.setAttribute('aria-expanded', 'false');
+                const lbl = customWrap.querySelector('.custom-select-label-text');
+                if (lbl) {
+                    lbl.textContent = '-- Pilih Gerakan / Kardio --';
+                    lbl.classList.add('placeholder');
+                }
+                const sInp = customWrap.querySelector('.custom-select-search-input');
+                if (sInp) sInp.value = '';
+            }
 
             const catBadge = newBlock.querySelector('.exercise-category-badge');
             if (catBadge) {
@@ -1280,6 +1555,30 @@
         window.addEventListener('beforeunload', function() {
             if (!isSubmitting) {
                 saveLocalBackup();
+            }
+        });
+
+        // Close custom select dropdowns when clicking outside or pressing Escape
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select-wrapper')) {
+                document.querySelectorAll('.custom-select-wrapper.is-open').forEach(w => {
+                    w.classList.remove('is-open');
+                    const trig = w.querySelector('.custom-select-trigger');
+                    if (trig) trig.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.custom-select-wrapper.is-open').forEach(w => {
+                    w.classList.remove('is-open');
+                    const trig = w.querySelector('.custom-select-trigger');
+                    if (trig) {
+                        trig.setAttribute('aria-expanded', 'false');
+                        trig.focus();
+                    }
+                });
             }
         });
 
