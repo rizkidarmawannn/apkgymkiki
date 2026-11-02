@@ -94,15 +94,49 @@ class ProgressController extends Controller
                 ];
             });
 
-        $startingWeight = $firstWeight?->weight ?? $profile?->weight ?? 0;
-        $currentWeight = $latestWeight?->weight ?? $profile?->weight ?? 0;
-        $targetWeight = $profile?->target_weight ?? 0;
+        $allWeightLogs = WeightLog::where('user_id', $user->id)
+            ->orderBy('date', 'asc')
+            ->get();
+
+        $startingWeight = (float)($firstWeight?->weight ?? $profile?->weight ?? 0);
+        $currentWeight = (float)($latestWeight?->weight ?? $profile?->weight ?? $startingWeight);
+        $targetWeight = (float)($profile?->target_weight ?? 0);
+
+        // All-time statistics
+        $maxWeight = $allWeightLogs->isNotEmpty() ? (float)$allWeightLogs->max('weight') : $currentWeight;
+        $minWeight = $allWeightLogs->isNotEmpty() ? (float)$allWeightLogs->min('weight') : $currentWeight;
+        $avgWeight = $allWeightLogs->isNotEmpty() ? round((float)$allWeightLogs->avg('weight'), 1) : $currentWeight;
+        $totalLost = round($currentWeight - $startingWeight, 1);
+        $lostPercent = ($startingWeight > 0)
+            ? round((($currentWeight - $startingWeight) / $startingWeight) * 100, 1)
+            : 0;
+        $toGoal = ($targetWeight > 0)
+            ? round(abs($currentWeight - $targetWeight), 1)
+            : 0;
+
+        // Current month weight logs
+        $now = Carbon::now();
+        $startOfMonth = $now->copy()->startOfMonth();
+        $monthLogs = $allWeightLogs->filter(fn($l) => Carbon::parse($l->date)->greaterThanOrEqualTo($startOfMonth));
+
+        $monthFirstWeight = (float)($monthLogs->first()?->weight ?? $currentWeight);
+        $monthMaxWeight = $monthLogs->isNotEmpty() ? (float)$monthLogs->max('weight') : $currentWeight;
+        $monthMinWeight = $monthLogs->isNotEmpty() ? (float)$monthLogs->min('weight') : $currentWeight;
+        $monthAvgWeight = $monthLogs->isNotEmpty() ? round((float)$monthLogs->avg('weight'), 1) : $currentWeight;
+        $monthTotalLost = round($currentWeight - $monthFirstWeight, 1);
+        $monthLostPercent = ($monthFirstWeight > 0)
+            ? round((($currentWeight - $monthFirstWeight) / $monthFirstWeight) * 100, 1)
+            : 0;
+        $monthName = strtoupper($now->translatedFormat('F Y'));
 
         return view('progress.index', compact(
             'user', 'profile', 'weightLogs', 'latestWeight', 'firstWeight',
             'startingWeight', 'currentWeight', 'targetWeight',
             'weightChange', 'workoutsThisWeek', 'avgCalories',
-            'exerciseProgress', 'period'
+            'exerciseProgress', 'period',
+            'maxWeight', 'minWeight', 'avgWeight', 'totalLost', 'lostPercent', 'toGoal',
+            'monthFirstWeight', 'monthMaxWeight', 'monthMinWeight', 'monthAvgWeight',
+            'monthTotalLost', 'monthLostPercent', 'monthName'
         ));
     }
 
@@ -110,6 +144,7 @@ class ProgressController extends Controller
     {
         $request->validate([
             'weight' => 'required|numeric|min:20|max:300',
+            'target_weight' => 'nullable|numeric|min:20|max:300',
             'date' => 'required|string',
         ]);
 
@@ -134,11 +169,13 @@ class ProgressController extends Controller
             ]
         );
 
-        // Also update profile weight
-        $profile = Auth::user()->profile;
-        if ($profile) {
-            $profile->update(['weight' => $request->weight]);
+        // Also update profile weight and target_weight
+        $profile = Auth::user()->profile ?? Auth::user()->profile()->create([]);
+        $profileUpdates = ['weight' => $request->weight];
+        if ($request->filled('target_weight')) {
+            $profileUpdates['target_weight'] = $request->target_weight;
         }
+        $profile->update($profileUpdates);
 
         return redirect()->route('progress.index')->with('success', 'Berat badan berhasil disimpan!');
     }

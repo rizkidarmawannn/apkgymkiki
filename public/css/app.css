@@ -2782,6 +2782,249 @@ select.form-control {
     color: #FB923C;
 }
 
+/* ==========================================================================
+   WEIGHT TRACKER SHEET (Matching Excel Weight Tracker Template)
+   ========================================================================== */
+.weight-tracker-sheet {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl, 16px);
+    padding: 24px 28px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+}
+
+.weight-tracker-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.wt-bars-icon {
+    width: 38px;
+    height: 42px;
+    flex-shrink: 0;
+    color: #E05D52;
+}
+
+.wt-brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.wt-group-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.wt-main-title {
+    font-size: 1.85rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.wt-month-subtitle {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #E05D52;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.weight-tracker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 24px;
+    margin-top: 22px;
+}
+
+.wt-card {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+.wt-card-header {
+    padding: 16px 18px 8px 18px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wt-user-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #E05D52;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.wt-badge-scope {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(224, 93, 82, 0.12);
+    color: #E05D52;
+}
+
+.wt-readout-wrap {
+    padding: 14px 18px;
+}
+
+.wt-readout-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding: 0 4px;
+}
+
+.wt-readout-boxes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.wt-display-box {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    background: #0F172A;
+    color: #FFFFFF;
+    font-size: 1.85rem;
+    font-weight: 900;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    padding: 10px 8px;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .wt-display-box {
+    background: #090D16;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.wt-arrow {
+    flex-shrink: 0;
+    color: #94A3B8;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wt-sublabel {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #E05D52;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+.wt-sublabel::before,
+.wt-sublabel::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1.5px solid rgba(224, 93, 82, 0.35);
+}
+
+.wt-sublabel span {
+    padding: 0 10px;
+}
+
+.wt-table {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.wt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    border-top: 1px solid var(--border-light);
+    font-size: 0.9rem;
+}
+
+.wt-row:nth-child(even) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .wt-row:nth-child(even) {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.wt-cell-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.wt-cell-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #E05D52;
+    text-align: right;
+}
+
+.wt-banner-row {
+    background: linear-gradient(135deg, #EF4444 0%, #EA580C 100%);
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.wt-banner-label {
+    color: #FFFFFF;
+    font-size: 0.86rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.wt-banner-val {
+    color: #FFFFFF;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
 
 
 

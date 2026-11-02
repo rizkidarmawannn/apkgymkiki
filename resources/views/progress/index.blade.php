@@ -7,62 +7,160 @@
     <h1>Progres</h1>
 </div>
 
-<div class="progress-grid mb-4">
-    <!-- Weight Input Card -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h3 class="m-0">Catat Berat Badan</h3>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('progress.store') }}" method="POST" class="d-flex flex-gap align-end">
-                @csrf
-                <div class="form-group mb-0 flex-1">
-                    <label>Berat Badan (kg)</label>
-                    <input type="number" step="0.1" name="weight" class="form-control" required placeholder="cth. 75.5">
-                </div>
-                <div class="form-group mb-0 flex-1">
-                    <label>Tanggal <small class="text-muted">(dd/mm/yyyy)</small></label>
-                    <input type="text" name="date" class="form-control" required placeholder="dd/mm/yyyy cth. {{ date('d/m/Y') }}" value="{{ date('d/m/Y') }}" pattern="\d{1,2}/\d{1,2}/\d{4}" title="Format: dd/mm/yyyy (contoh: {{ date('d/m/Y') }})">
-                </div>
-                <button type="submit" class="btn btn-primary h-100">Simpan</button>
-            </form>
+<!-- Weight Tracker Sheet (Matching Excel Weight Tracker Template) -->
+<div class="weight-tracker-sheet">
+    <div class="weight-tracker-header">
+        <svg class="wt-bars-icon" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="2" y="10" width="3.5" height="12" rx="1" fill="#E05D52" opacity="0.6"/>
+            <rect x="7.5" y="6" width="3.5" height="16" rx="1" fill="#E05D52" opacity="0.8"/>
+            <rect x="13" y="2" width="3.5" height="20" rx="1" fill="#E05D52"/>
+            <rect x="18.5" y="7" width="3.5" height="15" rx="1" fill="#E05D52" opacity="0.9"/>
+        </svg>
+        <div class="wt-brand-text">
+            <span class="wt-group-title">FITNESS TRACKER</span>
+            <h2 class="wt-main-title">Weight Tracker</h2>
+            <span class="wt-month-subtitle">BULAN {{ $monthName }}</span>
         </div>
     </div>
 
-    <!-- Weight Stats Card -->
-    <div class="card mb-4 bg-primary text-white text-center p-4 rounded-xl">
-        <div class="d-flex justify-content-around">
-            <div>
-                <small class="text-white-50 d-block">Awal</small>
-                <strong class="text-xl">{{ $startingWeight ?? '0.0' }} kg</strong>
+    <div class="weight-tracker-grid">
+        <!-- Card 1: User's Overall Progress (Matching Column 1) -->
+        <div class="wt-card">
+            <div class="wt-card-header">
+                <h3 class="wt-user-title">{{ $user->name }}</h3>
+                <span class="wt-badge-scope">Semua Waktu</span>
             </div>
-            <div>
-                <small class="text-white-50 d-block">Sekarang</small>
-                <strong class="text-xl">{{ $currentWeight ?? '0.0' }} kg</strong>
+
+            <div class="wt-readout-wrap">
+                <div class="wt-readout-labels">
+                    <span>STARTING</span>
+                    <span>GOAL</span>
+                </div>
+                <div class="wt-readout-boxes">
+                    <div class="wt-display-box">{{ $startingWeight > 0 ? number_format($startingWeight, ($startingWeight == (int)$startingWeight ? 0 : 1)) : '-' }}</div>
+                    <div class="wt-arrow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
+                    <div class="wt-display-box">{{ $targetWeight > 0 ? number_format($targetWeight, ($targetWeight == (int)$targetWeight ? 0 : 1)) : '-' }}</div>
+                </div>
+                <div class="wt-sublabel">
+                    <span>WEIGHT (KG)</span>
+                </div>
             </div>
-            <div>
-                <small class="text-white-50 d-block">Target</small>
-                <strong class="text-xl">{{ $targetWeight ?? '0.0' }} kg</strong>
+
+            <div class="wt-table">
+                <div class="wt-row">
+                    <span class="wt-cell-label">MAXIMUM</span>
+                    <span class="wt-cell-val">{{ number_format($maxWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">MINIMUM</span>
+                    <span class="wt-cell-val">{{ number_format($minWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">LOST %</span>
+                    <span class="wt-cell-val">{{ ($lostPercent > 0 ? '+' : '') . number_format($lostPercent, 1) }}%</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">AVERAGE</span>
+                    <span class="wt-cell-val">{{ number_format($avgWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">TO GOAL</span>
+                    <span class="wt-cell-val">{{ $targetWeight > 0 ? number_format($toGoal, 1) : '-' }}</span>
+                </div>
+                <div class="wt-banner-row">
+                    <span class="wt-banner-label">TOTAL LOST</span>
+                    <span class="wt-banner-val">{{ abs($totalLost) > 0 ? number_format(abs($totalLost), 1) : '0' }}</span>
+                </div>
             </div>
         </div>
-        <div class="mt-4 pt-3 border-top border-white-25">
-            <small class="text-white-50 d-block">Perubahan</small>
-            @php 
-                $change = ($currentWeight ?? 0) - ($startingWeight ?? 0); 
-                $goal = $profile?->goal ?? $user->profile?->goal ?? 'lose_weight';
-                $isGood = (str_contains($goal, 'lose') && $change <= 0) || (str_contains($goal, 'gain') && $change >= 0);
-            @endphp
-            <strong class="text-2xl d-flex align-center justify-content-center flex-gap">
-                {{ abs($change) }} kg 
-                @if($change < 0)
-                    <span style="color: #6ee7b7">↓</span>
-                @elseif($change > 0)
-                    <span style="color: #fca5a5">↑</span>
-                @else
-                    <span>-</span>
-                @endif
-            </strong>
+
+        <!-- Card 2: Current Month Progress (Matching Column 2) -->
+        <div class="wt-card">
+            <div class="wt-card-header">
+                <h3 class="wt-user-title">Bulan Ini</h3>
+                <span class="wt-badge-scope">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</span>
+            </div>
+
+            <div class="wt-readout-wrap">
+                <div class="wt-readout-labels">
+                    <span>STARTING</span>
+                    <span>CURRENT</span>
+                </div>
+                <div class="wt-readout-boxes">
+                    <div class="wt-display-box">{{ $monthFirstWeight > 0 ? number_format($monthFirstWeight, ($monthFirstWeight == (int)$monthFirstWeight ? 0 : 1)) : '-' }}</div>
+                    <div class="wt-arrow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
+                    <div class="wt-display-box">{{ $currentWeight > 0 ? number_format($currentWeight, ($currentWeight == (int)$currentWeight ? 0 : 1)) : '-' }}</div>
+                </div>
+                <div class="wt-sublabel">
+                    <span>WEIGHT (KG)</span>
+                </div>
+            </div>
+
+            <div class="wt-table">
+                <div class="wt-row">
+                    <span class="wt-cell-label">MAXIMUM</span>
+                    <span class="wt-cell-val">{{ number_format($monthMaxWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">MINIMUM</span>
+                    <span class="wt-cell-val">{{ number_format($monthMinWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">LOST %</span>
+                    <span class="wt-cell-val">{{ ($monthLostPercent > 0 ? '+' : '') . number_format($monthLostPercent, 1) }}%</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">AVERAGE</span>
+                    <span class="wt-cell-val">{{ number_format($monthAvgWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">TO GOAL</span>
+                    <span class="wt-cell-val">{{ $targetWeight > 0 ? number_format($toGoal, 1) : '-' }}</span>
+                </div>
+                <div class="wt-banner-row">
+                    <span class="wt-banner-label">TOTAL LOST</span>
+                    <span class="wt-banner-val">{{ abs($monthTotalLost) > 0 ? number_format(abs($monthTotalLost), 1) : '0' }}</span>
+                </div>
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- Weight Input Card -->
+<div class="card mb-4">
+    <div class="card-header flex-between align-center">
+        <h3 class="m-0" style="font-size: 1.05rem; font-weight: 800;">Catat Berat Badan & Target</h3>
+        <span class="text-xs text-muted font-semibold">Timbangan Rutin</span>
+    </div>
+    <div class="card-body">
+        <form action="{{ route('progress.store') }}" method="POST" class="d-flex flex-wrap flex-gap align-end">
+            @csrf
+            <div class="form-group mb-0 flex-1" style="min-width: 150px;">
+                <label style="font-weight: 700; font-size: 0.85rem;">Berat Hari Ini (kg)</label>
+                <input type="number" step="0.1" name="weight" class="form-control" required placeholder="cth. 75.5" value="{{ $currentWeight > 0 ? $currentWeight : '' }}">
+            </div>
+            <div class="form-group mb-0 flex-1" style="min-width: 150px;">
+                <label style="font-weight: 700; font-size: 0.85rem;">Target Berat (kg) <small class="text-muted font-normal">(opsional)</small></label>
+                <input type="number" step="0.1" name="target_weight" class="form-control" placeholder="Target kg" value="{{ $targetWeight > 0 ? $targetWeight : '' }}">
+            </div>
+            <div class="form-group mb-0 flex-1" style="min-width: 150px;">
+                <label style="font-weight: 700; font-size: 0.85rem;">Tanggal <small class="text-muted font-normal">(dd/mm/yyyy)</small></label>
+                <input type="text" name="date" class="form-control" required placeholder="dd/mm/yyyy" value="{{ date('d/m/Y') }}" pattern="\d{1,2}/\d{1,2}/\d{4}" title="Format: dd/mm/yyyy">
+            </div>
+            <button type="submit" class="btn btn-primary" style="height: 42px; font-weight: 700; padding: 0 24px;">
+                Simpan
+            </button>
+        </form>
     </div>
 </div>
 

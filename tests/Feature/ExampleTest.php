@@ -95,5 +95,37 @@ class ExampleTest extends TestCase
 
         $response = $this->actingAs($user)->get('/progress');
         $response->assertStatus(200);
+        $response->assertSee('Weight Tracker');
+        $response->assertSee('STARTING');
+        $response->assertSee('GOAL');
+        $response->assertSee('MAXIMUM');
+        $response->assertSee('MINIMUM');
+        $response->assertSee('LOST %');
+        $response->assertSee('AVERAGE');
+        $response->assertSee('TO GOAL');
+        $response->assertSee('TOTAL LOST');
+    }
+
+    public function test_user_can_store_weight_with_target(): void
+    {
+        $user = \App\Models\User::first() ?? \App\Models\User::factory()->create();
+
+        $response = $this->actingAs($user)->post('/progress/weight', [
+            'weight' => 72.5,
+            'target_weight' => 68.0,
+            'date' => '02/11/2026',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('progress.index'));
+
+        $this->assertDatabaseHas('weight_logs', [
+            'user_id' => $user->id,
+            'weight' => 72.5,
+            'date' => '2026-11-02 00:00:00',
+        ]);
+
+        $this->assertEquals(72.5, $user->fresh()->profile->weight);
+        $this->assertEquals(68.0, $user->fresh()->profile->target_weight);
     }
 }
