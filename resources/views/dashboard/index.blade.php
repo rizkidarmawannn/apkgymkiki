@@ -57,11 +57,19 @@
             <!-- Right: Best Record & Quick Rest Day Toggle -->
             <div class="streak-actions-group">
                 <div class="streak-record-pill">
-                    <span class="record-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; vertical-align: -1px; margin-right: 2px;"><path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"/><path d="M6 3h12a2 2 0 0 1 2 2v6a8 8 0 0 1-16 0V5a2 2 0 0 1 2-2z"/></svg>
-                        Rekor Terbaik
-                    </span>
-                    <strong class="record-days">{{ $streakData['best_streak'] }} Hari</strong>
+                    <div class="record-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/>
+                            <path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
+                            <path d="M4 22h16"/>
+                            <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"/>
+                            <path d="M6 3h12a2 2 0 0 1 2 2v6a8 8 0 0 1-16 0V5a2 2 0 0 1 2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="record-content">
+                        <span class="record-title">Rekor Terbaik</span>
+                        <strong class="record-days">{{ $streakData['best_streak'] }} Hari</strong>
+                    </div>
                 </div>
 
                 <button type="button" 
@@ -122,29 +130,55 @@
 <!-- Stats Ringkasan Grid -->
 <div class="stats-grid mb-4">
     <div class="stat-card">
-        <h3 style="display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; color: var(--text-muted);"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <h3>
+            <span class="stat-icon-wrapper stat-icon-scale">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="4"/>
+                    <circle cx="12" cy="8" r="2.5"/>
+                    <path d="M12 6.5V8l1 0.8"/>
+                    <path d="M7 17h10"/>
+                </svg>
+            </span>
             <span>Berat Sekarang</span>
         </h3>
         <p class="stat-value">{{ isset($currentWeight) ? number_format($currentWeight, 1) : '—' }} <small class="text-muted fw-medium">kg</small></p>
     </div>
     <div class="stat-card">
-        <h3 style="display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 15px; height: 15px; color: #f59e0b;"><path d="M12 2c-.3 2-2.5 4.5-2.5 7.5a6 6 0 0 0 11.5 2.5c.3-.8.5-1.7.5-2.5-1 1-2.2 1.5-3.5 1.5-2.5 0-4.5-2-4.5-4.5 0-1.8.8-3.4 2-4.5C13.5 2 12.5 2 12 2z"/></svg>
+        <h3>
+            <span class="stat-icon-wrapper stat-icon-flame">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2c-.5 2-2 4-3.5 5.5C6.5 9.5 5 12.5 5 16c0 3.87 3.13 7 7 7s7-3.13 7-7c0-3-1.5-5.5-3-7.5-.5 1-1.2 2-2 2.5.5-2.5 0-5.5-2-9z"/>
+                </svg>
+            </span>
             <span>Kalori Terbakar</span>
         </h3>
         <p class="stat-value text-warning">{{ isset($todayCaloriesBurned) && $todayCaloriesBurned > 0 ? number_format($todayCaloriesBurned) : '0' }} <small class="text-muted fw-medium">kkal</small></p>
     </div>
     <div class="stat-card">
-        <h3 style="display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; color: var(--text-muted);"><path d="M18 2v20"/><path d="M18 7c1.66 0 3-1.34 3-3V2h-3v5Z"/><path d="M6 2v6a3 3 0 0 0 6 0V2"/><line x1="9" x2="9" y1="8" y2="22"/></svg>
+        <h3>
+            <span class="stat-icon-wrapper stat-icon-food">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/>
+                    <path d="M15 2v20"/>
+                    <path d="M7 2v20"/>
+                    <path d="M4 2v4a3 3 0 0 0 6 0V2"/>
+                </svg>
+            </span>
             <span>Asupan Makanan</span>
         </h3>
         <p class="stat-value">{{ isset($todayCalories) ? number_format($todayCalories) : '0' }} <small class="text-muted fw-medium">kkal</small></p>
     </div>
     <div class="stat-card">
-        <h3 style="display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; color: var(--text-muted);"><path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12M4 7v10M20 7v10"/></svg>
+        <h3>
+            <span class="stat-icon-wrapper stat-icon-workout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 7v10"/>
+                    <path d="M18 7v10"/>
+                    <rect x="3" y="9" width="3" height="6" rx="1"/>
+                    <rect x="18" y="9" width="3" height="6" rx="1"/>
+                    <line x1="6" y1="12" x2="18" y2="12"/>
+                </svg>
+            </span>
             <span>Sesi Latihan</span>
         </h3>
         <p class="stat-value">{{ $workoutsThisWeek ?? 0 }} <small class="text-muted fw-medium text-sm">minggu ini</small></p>

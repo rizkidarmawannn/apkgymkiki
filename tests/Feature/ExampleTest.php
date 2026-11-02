@@ -104,6 +104,21 @@ class ExampleTest extends TestCase
         $response->assertSee('AVERAGE');
         $response->assertSee('TO GOAL');
         $response->assertSee('TOTAL LOST');
+        $response->assertSee('NAIK / TURUN BB');
+        $response->assertSee('KALORI TERBAKAR');
+    }
+
+    public function test_user_can_view_dashboard_with_stats_and_record(): void
+    {
+        $user = \App\Models\User::first() ?? \App\Models\User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('Rekor Terbaik');
+        $response->assertSee('Berat Sekarang');
+        $response->assertSee('Kalori Terbakar');
+        $response->assertSee('Asupan Makanan');
+        $response->assertSee('Sesi Latihan');
     }
 
     public function test_user_can_store_weight_with_target(): void

@@ -61,12 +61,28 @@
                     <span class="wt-cell-val">{{ number_format($minWeight, 1) }}</span>
                 </div>
                 <div class="wt-row">
+                    <span class="wt-cell-label">NAIK / TURUN BB</span>
+                    @if($totalWeightChange < 0)
+                        <span class="wt-cell-val" style="color: #10b981; font-weight: 800;">↓ Turun {{ number_format(abs($totalWeightChange), 1) }} kg</span>
+                    @elseif($totalWeightChange > 0)
+                        <span class="wt-cell-val" style="color: #ef4444; font-weight: 800;">↑ Naik {{ number_format($totalWeightChange, 1) }} kg</span>
+                    @else
+                        <span class="wt-cell-val text-muted">Tetap (0.0 kg)</span>
+                    @endif
+                </div>
+                <div class="wt-row">
                     <span class="wt-cell-label">LOST %</span>
                     <span class="wt-cell-val">{{ ($lostPercent > 0 ? '+' : '') . number_format($lostPercent, 1) }}%</span>
                 </div>
                 <div class="wt-row">
                     <span class="wt-cell-label">AVERAGE</span>
                     <span class="wt-cell-val">{{ number_format($avgWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">KALORI TERBAKAR</span>
+                    <span class="wt-cell-val" style="color: #f97316; font-weight: 800;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 3px; display: inline-block;"><path d="M12 2c-.5 2-2 4-3.5 5.5C6.5 9.5 5 12.5 5 16c0 3.87 3.13 7 7 7s7-3.13 7-7c0-3-1.5-5.5-3-7.5-.5 1-1.2 2-2 2.5.5-2.5 0-5.5-2-9z"/></svg>{{ number_format($totalCaloriesBurned) }} kkal
+                    </span>
                 </div>
                 <div class="wt-row">
                     <span class="wt-cell-label">TO GOAL</span>
@@ -116,12 +132,28 @@
                     <span class="wt-cell-val">{{ number_format($monthMinWeight, 1) }}</span>
                 </div>
                 <div class="wt-row">
+                    <span class="wt-cell-label">NAIK / TURUN BULAN INI</span>
+                    @if($monthWeightChange < 0)
+                        <span class="wt-cell-val" style="color: #10b981; font-weight: 800;">↓ Turun {{ number_format(abs($monthWeightChange), 1) }} kg</span>
+                    @elseif($monthWeightChange > 0)
+                        <span class="wt-cell-val" style="color: #ef4444; font-weight: 800;">↑ Naik {{ number_format($monthWeightChange, 1) }} kg</span>
+                    @else
+                        <span class="wt-cell-val text-muted">Tetap (0.0 kg)</span>
+                    @endif
+                </div>
+                <div class="wt-row">
                     <span class="wt-cell-label">LOST %</span>
                     <span class="wt-cell-val">{{ ($monthLostPercent > 0 ? '+' : '') . number_format($monthLostPercent, 1) }}%</span>
                 </div>
                 <div class="wt-row">
                     <span class="wt-cell-label">AVERAGE</span>
                     <span class="wt-cell-val">{{ number_format($monthAvgWeight, 1) }}</span>
+                </div>
+                <div class="wt-row">
+                    <span class="wt-cell-label">KALORI TERBAKAR</span>
+                    <span class="wt-cell-val" style="color: #f97316; font-weight: 800;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 3px; display: inline-block;"><path d="M12 2c-.5 2-2 4-3.5 5.5C6.5 9.5 5 12.5 5 16c0 3.87 3.13 7 7 7s7-3.13 7-7c0-3-1.5-5.5-3-7.5-.5 1-1.2 2-2 2.5.5-2.5 0-5.5-2-9z"/></svg>{{ number_format($monthCaloriesBurned) }} kkal
+                    </span>
                 </div>
                 <div class="wt-row">
                     <span class="wt-cell-label">TO GOAL</span>
@@ -257,7 +289,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('weightChart').getContext('2d');
+        const canvas = document.getElementById('weightChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
         let weightChart;
         
         const initialData = @json($weightLogs ?? []);
@@ -267,35 +301,137 @@
             const clean = String(dateStr).substring(0, 10);
             const parts = clean.split('-');
             if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                return `${parts[2]}/${parts[1]}`;
             }
             return dateStr;
         }
 
+        // Custom plugin to draw weight numbers cleanly above each bar like in Image 5
+        const barTopLabelsPlugin = {
+            id: 'barTopLabelsPlugin',
+            afterDatasetsDraw(chart) {
+                const { ctx, data } = chart;
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                ctx.save();
+                ctx.font = '700 11px Inter, system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+
+                chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                    const val = data.datasets[0].data[index];
+                    if (val !== undefined && val !== null && !isNaN(val)) {
+                        ctx.fillText(Number(val).toFixed(1), bar.x, Math.max(16, bar.y - 7));
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
+        function calculateYBounds(dataValues) {
+            const numVals = dataValues.map(v => Number(v)).filter(v => !isNaN(v) && v > 0);
+            if (numVals.length === 0) return { min: 40, max: 100 };
+            const min = Math.min(...numVals);
+            const max = Math.max(...numVals);
+            // Give subtle headroom so bar values don't get cut off and heights show realistic contrast
+            return {
+                min: Math.max(0, Math.floor(min - 2.5)),
+                max: Math.ceil(max + 2.5)
+            };
+        }
+
+        function createBarGradient(chartCtx, chartArea) {
+            if (!chartArea) return '#0ea5e9';
+            const gradient = chartCtx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+            gradient.addColorStop(0, '#0284c7');
+            gradient.addColorStop(0.5, '#0ea5e9');
+            gradient.addColorStop(1, '#38bdf8');
+            return gradient;
+        }
+
         function formatChartData(data) {
+            const rawWeights = data.map(item => Number(item.weight));
             return {
                 labels: data.map(item => formatDDMMYYYY(item.date)),
                 datasets: [{
                     label: 'Berat Badan (kg)',
-                    data: data.map(item => item.weight),
-                    borderColor: '#2563EB',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    tension: 0.3,
-                    fill: true
+                    data: rawWeights,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const { ctx, chartArea } = chart;
+                        return createBarGradient(ctx, chartArea);
+                    },
+                    hoverBackgroundColor: '#0284c7',
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    maxBarThickness: 38,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.7
                 }]
             };
         }
 
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const initialWeights = initialData.map(item => item.weight);
+        const bounds = calculateYBounds(initialWeights);
+
         if (initialData.length > 0) {
             weightChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: formatChartData(initialData),
+                plugins: [barTopLabelsPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 5,
+                            left: 5,
+                            right: 5
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#38bdf8',
+                            titleFont: { size: 12, weight: '700' },
+                            bodyFont: { size: 13, weight: '700' },
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Berat: ${context.parsed.y} kg`;
+                                }
+                            }
+                        }
+                    },
                     scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: isDark ? '#94a3b8' : '#64748b',
+                                font: { weight: '600', size: 11 }
+                            }
+                        },
                         y: {
-                            beginAtZero: false
+                            min: bounds.min,
+                            max: bounds.max,
+                            grid: {
+                                color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'
+                            },
+                            ticks: {
+                                color: isDark ? '#94a3b8' : '#64748b',
+                                font: { weight: '600', size: 11 },
+                                callback: function(val) {
+                                    return val + ' kg';
+                                }
+                            }
                         }
                     }
                 }
@@ -308,13 +444,17 @@
                 this.classList.add('active');
                 const days = this.dataset.period;
                 
-                fetch(`/progress/weight-data?days=${days}`)
+                fetch(`/progress/weight-data?period=${days}&days=${days}`)
                     .then(res => res.json())
                     .then(data => {
                         if (weightChart) {
                             const formatted = formatChartData(data);
+                            const newWeights = data.map(item => item.weight);
+                            const newBounds = calculateYBounds(newWeights);
                             weightChart.data.labels = formatted.labels;
                             weightChart.data.datasets[0].data = formatted.datasets[0].data;
+                            weightChart.options.scales.y.min = newBounds.min;
+                            weightChart.options.scales.y.max = newBounds.max;
                             weightChart.update();
                         }
                     });

@@ -107,6 +107,7 @@ class ProgressController extends Controller
         $minWeight = $allWeightLogs->isNotEmpty() ? (float)$allWeightLogs->min('weight') : $currentWeight;
         $avgWeight = $allWeightLogs->isNotEmpty() ? round((float)$allWeightLogs->avg('weight'), 1) : $currentWeight;
         $totalLost = round($currentWeight - $startingWeight, 1);
+        $totalWeightChange = $totalLost;
         $lostPercent = ($startingWeight > 0)
             ? round((($currentWeight - $startingWeight) / $startingWeight) * 100, 1)
             : 0;
@@ -124,19 +125,31 @@ class ProgressController extends Controller
         $monthMinWeight = $monthLogs->isNotEmpty() ? (float)$monthLogs->min('weight') : $currentWeight;
         $monthAvgWeight = $monthLogs->isNotEmpty() ? round((float)$monthLogs->avg('weight'), 1) : $currentWeight;
         $monthTotalLost = round($currentWeight - $monthFirstWeight, 1);
+        $monthWeightChange = $monthTotalLost;
         $monthLostPercent = ($monthFirstWeight > 0)
             ? round((($currentWeight - $monthFirstWeight) / $monthFirstWeight) * 100, 1)
             : 0;
         $monthName = strtoupper($now->translatedFormat('F Y'));
+
+        // Burned calories (all-time & this month)
+        $totalCaloriesBurned = (int) Workout::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->sum('estimated_calories');
+
+        $monthCaloriesBurned = (int) Workout::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->whereDate('date', '>=', $startOfMonth->toDateString())
+            ->sum('estimated_calories');
 
         return view('progress.index', compact(
             'user', 'profile', 'weightLogs', 'latestWeight', 'firstWeight',
             'startingWeight', 'currentWeight', 'targetWeight',
             'weightChange', 'workoutsThisWeek', 'avgCalories',
             'exerciseProgress', 'period',
-            'maxWeight', 'minWeight', 'avgWeight', 'totalLost', 'lostPercent', 'toGoal',
+            'maxWeight', 'minWeight', 'avgWeight', 'totalLost', 'totalWeightChange', 'lostPercent', 'toGoal',
             'monthFirstWeight', 'monthMaxWeight', 'monthMinWeight', 'monthAvgWeight',
-            'monthTotalLost', 'monthLostPercent', 'monthName'
+            'monthTotalLost', 'monthWeightChange', 'monthLostPercent', 'monthName',
+            'totalCaloriesBurned', 'monthCaloriesBurned'
         ));
     }
 
@@ -182,7 +195,7 @@ class ProgressController extends Controller
 
     public function weightData(Request $request)
     {
-        $period = $request->period ?? 30;
+        $period = $request->period ?? $request->days ?? 30;
         $weightLogs = WeightLog::where('user_id', Auth::id())
             ->where('date', '>=', Carbon::now()->subDays((int)$period))
             ->orderBy('date')

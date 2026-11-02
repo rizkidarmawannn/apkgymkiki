@@ -67,8 +67,8 @@
             <div class="d-flex align-center flex-gap-sm">
                 @if(isset($streakData))
                     <a href="{{ route('dashboard') }}#streak-section" class="streak-pill streak-pill-{{ $streakData['status'] }}" title="Streak Konsistensi: {{ $streakData['current_streak'] }} Hari ({{ $streakData['flame_title'] }})">
-                        <span class="streak-flame-icon" style="display: inline-flex; align-items: center;">
-                            <x-flame-shape :tier="$streakData['flame_tier'] ?? 0" :status="$streakData['status'] ?? 'extinguished'" size="16" />
+                        <span class="streak-flame-icon" style="display: inline-flex; align-items: center; justify-content: center;">
+                            <x-flame-shape :tier="$streakData['flame_tier'] ?? 0" :status="$streakData['status'] ?? 'extinguished'" size="20" />
                         </span>
                         <span class="streak-count">{{ $streakData['current_streak'] }}</span>
                     </a>
