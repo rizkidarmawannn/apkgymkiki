@@ -168,4 +168,35 @@ class FinishWorkoutTest extends TestCase
         $response->assertViewHas('activeWorkout', null);
         $response->assertViewHas('selectedDate', now()->format('Y-m-d'));
     }
+
+    public function test_store_cardio_calculates_estimated_calories(): void
+    {
+        $user = User::factory()->create();
+        $cardio = Exercise::create([
+            'name' => 'Treadmill Test',
+            'category' => 'cardio',
+            'muscle' => 'cardiovascular',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('workouts.store'), [
+            'name' => 'Kardio Pagi',
+            'date' => now()->format('Y-m-d'),
+            'duration_seconds' => 1200,
+            'exercises' => [
+                [
+                    'exercise_id' => $cardio->id,
+                    'sets' => 1,
+                    'reps' => 20,
+                    'sets_list' => [
+                        ['duration' => 20, 'distance' => 3.2],
+                    ],
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(302);
+        $workout = Workout::where('user_id', $user->id)->first();
+        $this->assertNotNull($workout);
+        $this->assertGreaterThan(0, $workout->estimated_calories);
+    }
 }

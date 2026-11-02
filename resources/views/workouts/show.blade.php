@@ -21,6 +21,11 @@
         <div class="workout-meta mt-2 flex-gap">
             <span class="badge badge-primary">📅 {{ isset($workout->date) ? \Carbon\Carbon::parse($workout->date)->format('d/m/Y') : 'Tanggal' }}</span>
             <span class="badge badge-secondary">⏱️ {{ $workout->duration ?? 0 }} menit</span>
+            @if(!empty($workout->estimated_calories))
+                <span class="badge badge-warning" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    🔥 {{ number_format($workout->estimated_calories) }} kkal terbakar
+                </span>
+            @endif
             <span class="badge badge-{{ ($workout->status ?? '') === 'completed' ? 'success' : 'warning' }}">
                 {{ ($workout->status ?? '') === 'completed' ? 'Selesai' : 'Sedang Berjalan' }}
             </span>
@@ -36,11 +41,11 @@
                 </a>
             </div>
         @elseif(($workout->status ?? '') === 'completed' && isset($streakData) && $streakData['current_streak'] > 0)
-            <div class="streak-celebration-box mt-3">
-                <div class="streak-celebration-icon">🔥</div>
+            <div class="streak-celebration-box mt-3" style="background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: var(--r-md); padding: 12px 16px; display: flex; align-items: center; gap: 14px;">
+                <div class="streak-celebration-icon" style="font-size: 1.8rem;">{{ $streakData['flame_emoji'] }}</div>
                 <div class="streak-celebration-text">
                     <strong>Streak Api Menyala: {{ $streakData['current_streak'] }} Hari Beruntun!</strong>
-                    <p class="mb-0 text-sm">Konsistensimu luar biasa. {{ $streakData['flame_title'] }} terjaga hari ini!</p>
+                    <p class="mb-0 text-sm text-muted">Konsistensimu terjaga dengan baik. {{ $streakData['flame_title'] }} aktif!</p>
                 </div>
             </div>
         @endif
@@ -67,28 +72,45 @@
 
 <div class="exercise-list">
     @forelse($workout->workoutExercises ?? [] as $exercise)
+        @php
+            $isCardio = strtolower($exercise->exercise->category ?? '') === 'cardio';
+        @endphp
         <div class="card mb-3">
             <div class="card-body">
                 <div class="flex-between mb-3 align-center">
-                    <h4 class="m-0 text-primary">{{ $exercise->exercise->name ?? 'Nama Gerakan' }}</h4>
-                    <span class="badge badge-info">{{ $exercise->sets ?? 0 }} Set</span>
+                    <h4 class="m-0 text-primary">
+                        {{ $exercise->exercise->name ?? 'Nama Gerakan' }}
+                        @if($isCardio)
+                            <span class="badge badge-info ml-2" style="font-size: 0.72rem; vertical-align: middle;">Kardio</span>
+                        @endif
+                    </h4>
+                    <span class="badge badge-secondary">{{ $exercise->sets ?? 0 }} {{ $isCardio ? 'Sesi' : 'Set' }}</span>
                 </div>
 
                 @if(!empty($exercise->sets_data) && is_array($exercise->sets_data))
-                    <small class="text-muted fw-semibold d-block mb-2 text-uppercase letter-wide">Rincian Set</small>
+                    <small class="text-muted fw-semibold d-block mb-2 text-uppercase letter-wide">Rincian {{ $isCardio ? 'Sesi Kardio' : 'Set' }}</small>
                     <div class="d-flex flex-wrap flex-gap-sm">
                         @foreach($exercise->sets_data as $s)
-                            <div style="flex: 1; min-width: 90px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 10px; text-align: center;">
-                                <small class="text-muted d-block">Set {{ $s['set'] }}</small>
-                                <strong class="text-primary" style="display: block; margin: 2px 0;">{{ $s['weight'] }} kg</strong>
-                                <span class="text-sm text-muted">{{ $s['reps'] }} reps</span>
+                            <div style="flex: 1; min-width: 100px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 12px; text-align: center;">
+                                <small class="text-muted d-block">{{ $isCardio ? 'Sesi' : 'Set' }} {{ $s['set'] }}</small>
+                                @if($isCardio || isset($s['duration']) && $s['duration'] > 0)
+                                    <strong class="text-primary" style="display: block; margin: 2px 0;">{{ $s['duration'] ?? 0 }} mnt</strong>
+                                    <span class="text-sm text-muted">{{ !empty($s['distance']) ? $s['distance'] . ' km' : 'Kardio' }}</span>
+                                @else
+                                    <strong class="text-primary" style="display: block; margin: 2px 0;">{{ $s['weight'] ?? 0 }} kg</strong>
+                                    <span class="text-sm text-muted">{{ $s['reps'] ?? 0 }} reps</span>
+                                @endif
                             </div>
                         @endforeach
                     </div>
                 @else
                     <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 14px;">
                         <small class="text-muted d-block">Ringkasan</small>
-                        <strong>{{ $exercise->weight ?? 0 }} kg &times; {{ $exercise->sets }} set &times; {{ $exercise->reps }} reps</strong>
+                        @if($isCardio)
+                            <strong>{{ $exercise->reps }} menit &times; {{ $exercise->sets }} sesi</strong>
+                        @else
+                            <strong>{{ $exercise->weight ?? 0 }} kg &times; {{ $exercise->sets }} set &times; {{ $exercise->reps }} reps</strong>
+                        @endif
                     </div>
                 @endif
 
@@ -100,7 +122,9 @@
             </div>
         </div>
     @empty
-        <p class="text-muted">Tidak ada gerakan yang tercatat untuk latihan ini.</p>
+        <div class="card p-4 text-center text-muted">
+            Belum ada gerakan dicatat pada latihan ini.
+        </div>
     @endforelse
 </div>
 @endsection

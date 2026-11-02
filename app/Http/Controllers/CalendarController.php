@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RestDay;
 use App\Models\Workout;
+use App\Services\StreakService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,14 +36,21 @@ class CalendarController extends Controller
             ->orderBy('date')
             ->get();
 
-        $formattedData = $this->formatYearWorkouts($workouts, $selectedYear);
+        $restDays = RestDay::where('user_id', $userId)
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get();
+
+        $formattedData = $this->formatYearWorkouts($workouts, $restDays, $selectedYear);
 
         // Stats calculation
         $totalCompletedYear = $workouts->where('status', 'completed')->count();
-        $activeDaysYear = $workouts->where('status', 'completed')->pluck('date')->unique()->count();
+        $workoutDatesYear = $workouts->where('status', 'completed')->pluck('date')->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))->unique();
+        $restDatesYear = $restDays->pluck('date')->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))->unique();
+        $activeDaysYear = $workoutDatesYear->concat($restDatesYear)->unique()->count();
 
-        // Calculate current streak
-        $currentStreak = $this->calculateStreak($userId);
+        // Calculate current streak via StreakService (includes rest days)
+        $streakInfo = StreakService::getStreakData($userId);
+        $currentStreak = $streakInfo['current_streak'];
 
         // Ongoing workout if any
         $ongoingWorkout = Workout::where('user_id', $userId)
@@ -57,6 +66,7 @@ class CalendarController extends Controller
             'totalCompletedYear' => $totalCompletedYear,
             'activeDaysYear' => $activeDaysYear,
             'currentStreak' => $currentStreak,
+            'streakData' => $streakInfo,
             'ongoingWorkout' => $ongoingWorkout,
         ]);
     }
@@ -75,10 +85,14 @@ class CalendarController extends Controller
             ->orderBy('date')
             ->get();
 
-        return response()->json($this->formatYearWorkouts($workouts, $year));
+        $restDays = RestDay::where('user_id', $userId)
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get();
+
+        return response()->json($this->formatYearWorkouts($workouts, $restDays, $year));
     }
 
-    private function formatYearWorkouts($workouts, int $year): array
+    private function formatYearWorkouts($workouts, $restDays, int $year): array
     {
         $grouped = [];
 
@@ -93,6 +107,7 @@ class CalendarController extends Controller
                 'name' => $w->name,
                 'status' => $w->status,
                 'duration' => $w->duration,
+                'estimated_calories' => $w->estimated_calories,
                 'date' => $dateKey,
                 'date_formatted' => Carbon::parse($w->date)->format('d/m/Y'),
                 'date_full' => (function($date) {
@@ -104,6 +119,7 @@ class CalendarController extends Controller
                 'exercises' => $w->workoutExercises->map(function ($we) {
                     return [
                         'name' => $we->exercise->name ?? 'Gerakan',
+                        'category' => $we->exercise->category ?? 'strength',
                         'sets' => $we->sets,
                         'weight' => (float)$we->weight,
                         'reps' => $we->reps,
@@ -115,43 +131,21 @@ class CalendarController extends Controller
             ];
         }
 
+        $restDaysMap = [];
+        foreach ($restDays as $rd) {
+            $dateKey = Carbon::parse($rd->date)->format('Y-m-d');
+            $restDaysMap[$dateKey] = [
+                'id' => $rd->id,
+                'date' => $dateKey,
+                'notes' => $rd->notes ?? 'Hari Istirahat (Rest Day)',
+            ];
+        }
+
         return [
             'year' => $year,
             'total_completed' => $workouts->where('status', 'completed')->count(),
             'workouts_by_date' => $grouped,
+            'rest_days_by_date' => $restDaysMap,
         ];
-    }
-
-    private function calculateStreak(int $userId): int
-    {
-        $workoutDates = Workout::where('user_id', $userId)
-            ->where('status', 'completed')
-            ->orderBy('date', 'desc')
-            ->pluck('date')
-            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
-            ->unique()
-            ->values();
-
-        if ($workoutDates->isEmpty()) {
-            return 0;
-        }
-
-        $streak = 0;
-        $checkDate = Carbon::today();
-
-        // If no workout today, check if there was one yesterday to continue streak
-        if (!$workoutDates->contains($checkDate->format('Y-m-d'))) {
-            $checkDate = Carbon::yesterday();
-            if (!$workoutDates->contains($checkDate->format('Y-m-d'))) {
-                return 0;
-            }
-        }
-
-        while ($workoutDates->contains($checkDate->format('Y-m-d'))) {
-            $streak++;
-            $checkDate->subDay();
-        }
-
-        return $streak;
     }
 }

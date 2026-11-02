@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exercise;
+use App\Models\User;
+use App\Models\WeightLog;
 use App\Models\Workout;
 use App\Models\WorkoutExercise;
 use Carbon\Carbon;
@@ -110,6 +112,7 @@ class WorkoutController extends Controller
                 'name' => $w->name,
                 'status' => $w->status,
                 'duration' => $w->duration,
+                'estimated_calories' => $w->estimated_calories,
                 'date_formatted' => self::idDate(Carbon::parse($w->date), 'l, d F Y'),
                 'exercise_count' => $w->workoutExercises->count(),
                 'exercises' => $w->workoutExercises->map(function ($we) {
@@ -140,12 +143,11 @@ class WorkoutController extends Controller
         if (!$request->has('new')) {
             $query = Workout::where('user_id', Auth::id())
                 ->where('status', 'in_progress');
-            
-            // If user clicked a specific date, only match an in-progress workout on that exact date
+
             if ($request->filled('date')) {
                 $query->whereDate('date', $request->input('date'));
             }
-            
+
             $activeWorkout = $query->with('workoutExercises.exercise')
                 ->latest('id')
                 ->first();
@@ -153,7 +155,9 @@ class WorkoutController extends Controller
 
         $selectedDate = $request->input('date');
         $exercises = Exercise::orderBy('category')->orderBy('name')->get()->groupBy('category');
-        return view('workouts.create', compact('exercises', 'activeWorkout', 'selectedDate'));
+        $cardioExerciseIds = Exercise::whereRaw('LOWER(category) = ?', ['cardio'])->pluck('id')->toArray();
+
+        return view('workouts.create', compact('exercises', 'activeWorkout', 'selectedDate', 'cardioExerciseIds'));
     }
 
     public function resume(Workout $workout)
@@ -166,8 +170,9 @@ class WorkoutController extends Controller
 
         $activeWorkout = $workout->load('workoutExercises.exercise');
         $exercises = Exercise::orderBy('category')->orderBy('name')->get()->groupBy('category');
+        $cardioExerciseIds = Exercise::whereRaw('LOWER(category) = ?', ['cardio'])->pluck('id')->toArray();
 
-        return view('workouts.create', compact('exercises', 'activeWorkout'));
+        return view('workouts.create', compact('exercises', 'activeWorkout', 'cardioExerciseIds'));
     }
 
     public function autosave(Request $request)
@@ -188,7 +193,6 @@ class WorkoutController extends Controller
                 ->where('id', $workoutId)
                 ->first();
 
-            // If the workout already completed, DO NOT resurrect or create a ghost in_progress workout!
             if ($existing && $existing->status === 'completed') {
                 return response()->json([
                     'success' => false,
@@ -201,7 +205,6 @@ class WorkoutController extends Controller
             }
         }
 
-        // Only search for an in-progress workout if workout_id wasn't provided
         if (!$workout && empty($workoutId)) {
             $query = Workout::where('user_id', Auth::id())
                 ->where('status', 'in_progress');
@@ -219,6 +222,8 @@ class WorkoutController extends Controller
             $name = 'Latihan ' . self::idDate(Carbon::today(), 'd M Y');
         }
 
+        $estimatedCalories = $this->calculateEstimatedCalories(Auth::id(), $request->exercises ?? [], $durationMins);
+
         if (!$workout) {
             $workout = Workout::create([
                 'user_id' => Auth::id(),
@@ -226,6 +231,7 @@ class WorkoutController extends Controller
                 'date' => $request->date ?? Carbon::today(),
                 'duration' => $durationMins,
                 'duration_seconds' => $durationSecs,
+                'estimated_calories' => $estimatedCalories,
                 'notes' => $request->notes,
                 'status' => 'in_progress',
             ]);
@@ -235,6 +241,7 @@ class WorkoutController extends Controller
                 'date' => $request->date ?? $workout->date,
                 'duration' => $durationMins > 0 ? $durationMins : $workout->duration,
                 'duration_seconds' => $durationSecs > 0 ? $durationSecs : $workout->duration_seconds,
+                'estimated_calories' => $estimatedCalories,
                 'notes' => $request->notes ?? $workout->notes,
             ]);
         }
@@ -246,6 +253,8 @@ class WorkoutController extends Controller
             foreach ($request->exercises as $ex) {
                 if (empty($ex['exercise_id'])) continue;
                 $exerciseId = $ex['exercise_id'];
+                $isCardio = false;
+
                 if ($exerciseId === 'custom' || !is_numeric($exerciseId)) {
                     $customName = !empty($ex['custom_name']) ? trim($ex['custom_name']) : 'Custom Exercise';
                     $exercise = Exercise::firstOrCreate(
@@ -253,6 +262,11 @@ class WorkoutController extends Controller
                         ['category' => 'Custom', 'muscle' => 'General']
                     );
                     $exerciseId = $exercise->id;
+                } else {
+                    $foundEx = Exercise::find($exerciseId);
+                    if ($foundEx && strtolower($foundEx->category) === 'cardio') {
+                        $isCardio = true;
+                    }
                 }
 
                 $setsData = [];
@@ -262,20 +276,23 @@ class WorkoutController extends Controller
                             'set' => $idx + 1,
                             'weight' => (float)($setData['weight'] ?? 0),
                             'reps' => (int)($setData['reps'] ?? 0),
+                            'duration' => (float)($setData['duration'] ?? 0),
+                            'distance' => (float)($setData['distance'] ?? 0),
                         ];
                     }
                 }
 
-                $maxWeight = !empty($setsData) ? max(array_column($setsData, 'weight')) : (float)($ex['weight'] ?? 0);
+                $weights = !empty($setsData) ? array_column($setsData, 'weight') : [];
+                $maxWeight = !empty($weights) ? max($weights) : (float)($ex['weight'] ?? 0);
                 $totalSets = !empty($setsData) ? count($setsData) : (int)($ex['sets'] ?? 1);
                 $firstReps = !empty($setsData) ? ($setsData[0]['reps'] ?? 10) : (int)($ex['reps'] ?? 10);
 
                 WorkoutExercise::create([
                     'workout_id' => $workout->id,
                     'exercise_id' => $exerciseId,
-                    'weight' => $maxWeight,
+                    'weight' => $isCardio ? 0 : $maxWeight,
                     'sets' => $totalSets,
-                    'reps' => $firstReps,
+                    'reps' => $isCardio ? (int)($setsData[0]['duration'] ?? 0) : $firstReps,
                     'sets_data' => !empty($setsData) ? $setsData : null,
                     'notes' => $ex['notes'] ?? null,
                 ]);
@@ -285,6 +302,7 @@ class WorkoutController extends Controller
         return response()->json([
             'success' => true,
             'workout_id' => $workout->id,
+            'estimated_calories' => $estimatedCalories,
             'message' => 'Progres tersimpan otomatis',
             'saved_at' => Carbon::now()->format('H:i:s'),
         ]);
@@ -299,15 +317,18 @@ class WorkoutController extends Controller
             'exercises.*.custom_name' => 'nullable|string|max:255',
             'exercises.*.weight' => 'nullable|numeric|min:0',
             'exercises.*.sets' => 'nullable|integer|min:1',
-            'exercises.*.reps' => 'nullable|integer|min:1',
+            'exercises.*.reps' => 'nullable|integer|min:0',
             'exercises.*.sets_list' => 'nullable|array',
             'exercises.*.notes' => 'nullable|string|max:500',
         ]);
 
         $durationSecs = (int)($request->duration_seconds ?? 0);
-        $durationMins = $durationSecs > 0 ? (int)ceil($durationSecs / 60) : ($request->duration ? (int)$request->duration : null);
+        $durationMins = $durationSecs > 0 ? (int)ceil($durationSecs / 60) : ($request->duration ? (int)$request->duration : 1);
+        if ($durationMins <= 0) $durationMins = 1;
 
-        $workout = DB::transaction(function () use ($request, $durationSecs, $durationMins) {
+        $estimatedCalories = $this->calculateEstimatedCalories(Auth::id(), $request->exercises ?? [], $durationMins);
+
+        $workout = DB::transaction(function () use ($request, $durationSecs, $durationMins, $estimatedCalories) {
             $workout = null;
             if (!empty($request->workout_id)) {
                 $workout = Workout::where('user_id', Auth::id())
@@ -330,6 +351,7 @@ class WorkoutController extends Controller
                     'date' => $request->date ?? Carbon::today(),
                     'duration' => $durationMins ?: ($workout->duration ?: 1),
                     'duration_seconds' => $durationSecs ?: $workout->duration_seconds,
+                    'estimated_calories' => $estimatedCalories,
                     'notes' => $request->notes,
                     'status' => 'completed',
                 ]);
@@ -341,6 +363,7 @@ class WorkoutController extends Controller
                     'date' => $request->date ?? Carbon::today(),
                     'duration' => $durationMins ?: 1,
                     'duration_seconds' => $durationSecs,
+                    'estimated_calories' => $estimatedCalories,
                     'notes' => $request->notes,
                     'status' => 'completed',
                 ]);
@@ -348,6 +371,8 @@ class WorkoutController extends Controller
 
             foreach ($request->exercises as $ex) {
                 $exerciseId = $ex['exercise_id'];
+                $isCardio = false;
+
                 if ($exerciseId === 'custom' || !is_numeric($exerciseId)) {
                     $customName = !empty($ex['custom_name']) ? trim($ex['custom_name']) : 'Custom Exercise';
                     $exercise = Exercise::firstOrCreate(
@@ -355,9 +380,13 @@ class WorkoutController extends Controller
                         ['category' => 'Custom', 'muscle' => 'General']
                     );
                     $exerciseId = $exercise->id;
+                } else {
+                    $foundEx = Exercise::find($exerciseId);
+                    if ($foundEx && strtolower($foundEx->category) === 'cardio') {
+                        $isCardio = true;
+                    }
                 }
 
-                // Individual Sets Data (e.g. Set 1: 40kg 12 reps, Set 2: 45kg 10 reps)
                 $setsData = [];
                 if (!empty($ex['sets_list']) && is_array($ex['sets_list'])) {
                     foreach ($ex['sets_list'] as $idx => $setData) {
@@ -365,6 +394,8 @@ class WorkoutController extends Controller
                             'set' => $idx + 1,
                             'weight' => (float)($setData['weight'] ?? $ex['weight'] ?? 0),
                             'reps' => (int)($setData['reps'] ?? $ex['reps'] ?? 0),
+                            'duration' => (float)($setData['duration'] ?? 0),
+                            'distance' => (float)($setData['distance'] ?? 0),
                         ];
                     }
                 }
@@ -377,9 +408,9 @@ class WorkoutController extends Controller
                 WorkoutExercise::create([
                     'workout_id' => $workout->id,
                     'exercise_id' => (int)$exerciseId,
-                    'weight' => $maxWeight,
+                    'weight' => $isCardio ? 0 : $maxWeight,
                     'sets' => $totalSets,
-                    'reps' => $firstReps,
+                    'reps' => $isCardio ? (int)($setsData[0]['duration'] ?? 0) : $firstReps,
                     'sets_data' => !empty($setsData) ? $setsData : null,
                     'notes' => $ex['notes'] ?? null,
                 ]);
@@ -388,9 +419,8 @@ class WorkoutController extends Controller
             return $workout;
         });
 
-        return redirect()->route('workouts.show', $workout)->with('success', 'Latihan selesai dan berhasil disimpan! 💪');
+        return redirect()->route('workouts.show', $workout)->with('success', 'Latihan selesai dan berhasil disimpan! 💪 Total estimasi kalori terbakar: ' . $estimatedCalories . ' kkal');
     }
-
 
     public function cancel(Workout $workout)
     {
@@ -407,13 +437,13 @@ class WorkoutController extends Controller
         // Check for personal records
         $prs = [];
         foreach ($workout->workoutExercises as $we) {
-            if (!$we->exercise) continue; // guard against orphaned exercise_id
+            if (!$we->exercise) continue;
 
             $previousMax = WorkoutExercise::where('exercise_id', $we->exercise_id)
                 ->whereHas('workout', fn($q) => $q->where('user_id', Auth::id())->where('id', '!=', $workout->id))
                 ->max('weight');
-            
-            if ($previousMax !== null && $we->weight > $previousMax) {
+
+            if ($previousMax !== null && $we->weight > $previousMax && $we->weight > 0) {
                 $prs[] = [
                     'exercise' => $we->exercise->name,
                     'weight' => $we->weight,
@@ -430,6 +460,58 @@ class WorkoutController extends Controller
         $this->authorizeUser($workout);
         $workout->delete();
         return redirect()->route('workouts.index')->with('success', 'Workout deleted.');
+    }
+
+    private function calculateEstimatedCalories(int $userId, array $exercises, int $durationMins): int
+    {
+        $user = User::find($userId);
+        $weightLog = WeightLog::where('user_id', $userId)->latest('date')->first();
+        $weight = (float)($weightLog?->weight ?? $user?->profile?->weight ?? 70);
+        if ($weight <= 0) $weight = 70;
+
+        $totalVolumeKg = 0;
+        $cardioMinutes = 0;
+        $strengthSetsCount = 0;
+
+        foreach ($exercises as $ex) {
+            $exerciseId = $ex['exercise_id'] ?? null;
+            $isCardio = false;
+
+            if ($exerciseId && is_numeric($exerciseId)) {
+                $exerciseModel = Exercise::find($exerciseId);
+                if ($exerciseModel && strtolower($exerciseModel->category) === 'cardio') {
+                    $isCardio = true;
+                }
+            }
+
+            if (!empty($ex['sets_list']) && is_array($ex['sets_list'])) {
+                foreach ($ex['sets_list'] as $s) {
+                    if ($isCardio) {
+                        $cardioMinutes += (float)($s['duration'] ?? 0);
+                    } else {
+                        $w = (float)($s['weight'] ?? 0);
+                        $r = (int)($s['reps'] ?? 0);
+                        $totalVolumeKg += ($w * $r);
+                        $strengthSetsCount++;
+                    }
+                }
+            }
+        }
+
+        // Strength MET ~5.5; Cardio MET ~8.0
+        $effectiveDuration = $durationMins > 0 ? $durationMins : (int)ceil($cardioMinutes + ($strengthSetsCount * 2));
+        $strengthMinutes = max(0, $effectiveDuration - $cardioMinutes);
+
+        // Standard exercise caloric expenditure formula: (MET * 3.5 * weightKg / 200) * minutes
+        $strengthCalories = ($strengthMinutes * 5.5 * 3.5 * $weight / 200) + ($totalVolumeKg * 0.015);
+        $cardioCalories = ($cardioMinutes * 8.0 * 3.5 * $weight / 200);
+
+        $total = round($strengthCalories + $cardioCalories);
+        if ($total <= 0 && ($strengthSetsCount > 0 || $cardioMinutes > 0)) {
+            $total = ($strengthSetsCount * 18) + (int)($cardioMinutes * 8);
+        }
+
+        return max(0, (int)$total);
     }
 
     private function authorizeUser(Workout $workout): void

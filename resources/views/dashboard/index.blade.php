@@ -6,7 +6,7 @@
 <div class="page-header flex-between align-center mb-4">
     <div>
         <h1 class="mb-0">Halo, {{ $user->name ?? 'Pengguna' }} 👋</h1>
-        <p class="text-sm text-muted mb-0">Yuk tetap konsisten hari ini.</p>
+        <p class="text-sm text-muted mb-0">Yuk tetap konsisten bangun kebiasaan sehatmu.</p>
     </div>
     @if(isset($ongoingWorkout) && $ongoingWorkout)
         <a href="{{ route('workouts.resume', $ongoingWorkout) }}" class="btn btn-warning" style="font-weight: 700;">▶️ Lanjutkan Latihan</a>
@@ -16,65 +16,88 @@
 </div>
 
 @if(isset($streakData))
-<div id="streak-section" class="tiktok-streak-card mb-4 flame-theme-{{ $streakData['flame_level'] }}">
-    <div class="streak-glow-bg"></div>
-    <div class="streak-card-inner">
-        <div class="streak-header-row">
-            <div class="streak-badge-hero">
-                <div class="flame-icon-wrapper {{ $streakData['status'] === 'lit' ? 'flame-animated' : ($streakData['status'] === 'warning' ? 'flame-flicker' : '') }}">
-                    @if($streakData['status'] === 'extinguished')
-                        <span class="flame-emoji-hero">🕯️</span>
-                    @elseif($streakData['status'] === 'warning')
-                        <span class="flame-emoji-hero">⏳</span>
-                    @else
-                        <span class="flame-emoji-hero">🔥</span>
-                    @endif
+<div id="streak-section" class="streak-pro-card mb-4 flame-tier-{{ $streakData['flame_tier'] }} flame-theme-{{ $streakData['flame_level'] }}">
+    <div class="streak-glow-ambient"></div>
+    <div class="streak-card-body">
+        <div class="streak-top-bar flex-between align-center">
+            <!-- Left Hero: Animated Flame + Counter -->
+            <div class="streak-hero-group">
+                <div class="streak-flame-circle tier-{{ $streakData['flame_tier'] }} status-{{ $streakData['status'] }}">
+                    <span class="streak-flame-emoji">{{ $streakData['flame_emoji'] }}</span>
                 </div>
-                <div class="streak-counter-info">
-                    <div class="streak-number-row">
-                        <span class="streak-number">{{ $streakData['current_streak'] }}</span>
-                        <span class="streak-label">HARI STREAK</span>
+                <div class="streak-text-group">
+                    <div class="streak-count-row">
+                        <span class="streak-huge-number">{{ $streakData['current_streak'] }}</span>
+                        <span class="streak-unit-label">HARI STREAK</span>
                     </div>
-                    <div class="streak-status-badge status-{{ $streakData['status'] }}">
-                        @if($streakData['status'] === 'lit')
-                            <span>⚡ {{ $streakData['flame_title'] }}</span>
+                    <div class="streak-tier-badge tier-{{ $streakData['flame_tier'] }}">
+                        @if($streakData['status'] === 'rest')
+                            <span class="badge-dot dot-yellow"></span>
+                            <span>🛌 Hari Istirahat &bull; Streak Terjaga</span>
+                        @elseif($streakData['status'] === 'lit')
+                            <span class="badge-dot dot-flame"></span>
+                            <span>{{ $streakData['flame_title'] }}</span>
                         @elseif($streakData['status'] === 'warning')
-                            <span>⚠️ Apimu Hampir Padam Hari Ini!</span>
+                            <span class="badge-dot dot-warning"></span>
+                            <span>⚠️ Selesaikan 1 Latihan atau Ambil Rest Day!</span>
                         @else
-                            <span>💤 Belum Ada Streak Aktif</span>
+                            <span class="badge-dot dot-muted"></span>
+                            <span>Api Belum Aktif</span>
                         @endif
                     </div>
                 </div>
             </div>
 
-            <div class="streak-best-badge">
-                <span class="best-label">🏆 Rekor Terbaik</span>
-                <span class="best-value">{{ $streakData['best_streak'] }} Hari</span>
+            <!-- Right: Best Record & Quick Rest Day Toggle -->
+            <div class="streak-actions-group">
+                <div class="streak-record-pill">
+                    <span class="record-title">🏆 Rekor Terbaik</span>
+                    <strong class="record-days">{{ $streakData['best_streak'] }} Hari</strong>
+                </div>
+
+                <button type="button" 
+                        id="btn-rest-day-toggle" 
+                        class="btn-rest-toggle {{ ($isRestDayToday ?? false) ? 'active' : '' }}" 
+                        data-active="{{ ($isRestDayToday ?? false) ? '1' : '0' }}"
+                        title="Tandai hari ini sebagai Rest Day agar streakmu tidak padam">
+                    <span class="rest-icon">🛌</span>
+                    <span id="rest-btn-label">{{ ($isRestDayToday ?? false) ? 'Rest Day Aktif (Kuning)' : 'Ambil Rest Day' }}</span>
+                </button>
             </div>
         </div>
 
-        <div class="streak-motivation-msg">
-            @if($streakData['status'] === 'lit')
-                <p>🔥 <strong>Kerja keras terbayar!</strong> Latihan hari ini sudah dicatat. Jaga api streakmu tetap menyala besok!</p>
-            @elseif($streakData['status'] === 'warning')
-                <p class="warning-text">⏰ <strong>Peringatan Streak!</strong> Kamu latihan kemarin tapi belum ada sesi hari ini. Selesaikan 1 latihan sebelum 23:59 agar apimu tidak padam!</p>
-            @else
-                <p>💪 <strong>Mulai apimu hari ini!</strong> Selesaikan latihan pertamamu sekarang untuk memantik streak api seperti TikTok.</p>
-            @endif
+        <!-- Milestone Progress (Tier 10, 50, 100+) -->
+        <div class="streak-milestone-bar-wrap mt-3">
+            <div class="flex-between align-center text-xs mb-1">
+                <span class="text-secondary fw-medium">
+                    @if($streakData['current_streak'] >= 100)
+                        👑 Tier Mahkota Emas Maksimal (100+ Hari)
+                    @else
+                        Target Tier Berikutnya: <strong>{{ $streakData['next_milestone'] }} Hari</strong>
+                        <span class="text-muted">({{ $streakData['days_to_milestone'] }} hari lagi)</span>
+                    @endif
+                </span>
+                <span class="fw-bold tier-color-text">{{ $streakData['milestone_progress'] }}%</span>
+            </div>
+            <div class="milestone-track">
+                <div class="milestone-fill tier-{{ $streakData['flame_tier'] }}" style="width: {{ $streakData['milestone_progress'] }}%;"></div>
+            </div>
         </div>
 
         <!-- 7-Day Week Indicator Dots -->
-        <div class="streak-week-track">
+        <div class="streak-week-track mt-3 pt-3">
             <div class="streak-week-label">Minggu Ini:</div>
             <div class="streak-week-days">
                 @foreach($streakData['week_days'] as $wDay)
-                    <div class="streak-day-item {{ $wDay['is_today'] ? 'day-today' : '' }} {{ $wDay['has_workout'] ? 'day-done' : '' }}">
+                    <div class="streak-day-item {{ $wDay['is_today'] ? 'day-today' : '' }} {{ $wDay['has_workout'] ? 'day-done' : '' }} {{ $wDay['is_rest'] ? 'day-rest' : '' }}">
                         <span class="day-name">{{ $wDay['day_name'] }}</span>
                         <div class="day-dot">
                             @if($wDay['has_workout'])
-                                <span>🔥</span>
+                                <span class="dot-icon" title="Latihan selesai">🔥</span>
+                            @elseif($wDay['is_rest'])
+                                <span class="dot-icon dot-rest" title="Hari Istirahat (Rest Day)">🟡</span>
                             @elseif($wDay['is_today'])
-                                <span class="dot-pulse">●</span>
+                                <span class="dot-pulse" title="Hari Ini">●</span>
                             @else
                                 <span class="dot-empty">•</span>
                             @endif
@@ -87,22 +110,23 @@
 </div>
 @endif
 
-<div class="stats-grid">
+<!-- Stats Ringkasan Grid -->
+<div class="stats-grid mb-4">
     <div class="stat-card">
         <h3>Berat Sekarang</h3>
         <p class="stat-value">{{ isset($currentWeight) ? number_format($currentWeight, 1) : '—' }} <small class="text-muted fw-medium">kg</small></p>
     </div>
     <div class="stat-card">
-        <h3>Kalori Hari Ini</h3>
-        <p class="stat-value">{{ isset($todayCalories) ? number_format($todayCalories) : '—' }} <small class="text-muted fw-medium">kkal</small></p>
+        <h3>🔥 Terbakar Hari Ini</h3>
+        <p class="stat-value text-warning">{{ isset($todayCaloriesBurned) && $todayCaloriesBurned > 0 ? number_format($todayCaloriesBurned) : '0' }} <small class="text-muted fw-medium">kkal</small></p>
+    </div>
+    <div class="stat-card">
+        <h3>🍽️ Asupan Kalori</h3>
+        <p class="stat-value">{{ isset($todayCalories) ? number_format($todayCalories) : '0' }} <small class="text-muted fw-medium">kkal</small></p>
     </div>
     <div class="stat-card">
         <h3>Latihan</h3>
         <p class="stat-value">{{ $workoutsThisWeek ?? 0 }} <small class="text-muted fw-medium text-sm">minggu ini</small></p>
-    </div>
-    <div class="stat-card">
-        <h3>Target Berat</h3>
-        <p class="stat-value">{{ isset($targetWeight) ? number_format($targetWeight, 1) : '—' }} <small class="text-muted fw-medium">kg</small></p>
     </div>
 </div>
 
@@ -114,7 +138,7 @@
                 @if(isset($ongoingWorkout) && $ongoingWorkout)
                     <span class="badge badge-warning">Sedang Berjalan</span>
                 @endif
-                <a href="{{ route('workouts.index') }}" class="btn btn-small btn-outline" style="padding: 3px 8px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;" title="Lihat Kalender Latihan">
+                <a href="{{ route('calendar.index') }}" class="btn btn-small btn-outline" style="padding: 3px 8px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;" title="Lihat Kalender Latihan">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                     <span>Kalender</span>
                 </a>
@@ -122,7 +146,7 @@
         </div>
         <div class="card-body">
             @if(isset($ongoingWorkout) && $ongoingWorkout)
-                <div class="p-3 rounded mb-2" style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid var(--warning);">
+                <div class="p-3 rounded mb-2 ongoing-workout-glass-card">
                     <div class="flex-between align-center mb-1">
                         <h3 class="mb-0 text-primary">{{ $ongoingWorkout->name }}</h3>
                         <span class="badge badge-warning">⚡ ON GOING</span>
@@ -131,6 +155,9 @@
                         <span class="badge badge-info">{{ $ongoingWorkout->workoutExercises->count() }} gerakan</span>
                         @if($ongoingWorkout->duration)
                             <span class="badge badge-secondary">{{ $ongoingWorkout->duration }} menit</span>
+                        @endif
+                        @if($ongoingWorkout->estimated_calories)
+                            <span class="badge badge-warning">🔥 ~{{ $ongoingWorkout->estimated_calories }} kkal</span>
                         @endif
                     </div>
                     <p class="text-sm text-muted mb-3">Sesi latihanmu belum selesai. Klik untuk melanjutkan dan catat set berikutnya!</p>
@@ -149,6 +176,9 @@
                     <div class="workout-meta mb-3">
                         <span class="badge badge-info">{{ $todayWorkout->workoutExercises->count() }} gerakan</span>
                         <span class="badge badge-secondary">{{ $todayWorkout->duration ?? 0 }} menit</span>
+                        @if($todayWorkout->estimated_calories)
+                            <span class="badge badge-warning">🔥 {{ $todayWorkout->estimated_calories }} kkal</span>
+                        @endif
                         <span class="badge badge-{{ $todayWorkout->status === 'completed' ? 'success' : 'warning' }}">
                             {{ $todayWorkout->status === 'completed' ? 'Selesai' : 'Sedang Berjalan' }}
                         </span>
@@ -158,18 +188,26 @@
                     @endif
                     <a href="{{ route('workouts.show', $todayWorkout) }}" class="btn btn-outline btn-small">Lihat Detail</a>
                 </div>
+            @elseif(isset($isRestDayToday) && $isRestDayToday)
+                <div class="text-center py-4">
+                    <div style="font-size: 2.4rem; margin-bottom: 8px;">🛋️</div>
+                    <h4 class="mb-1 text-warning">Hari Ini: Rest Day</h4>
+                    <p class="text-muted text-sm mb-0">Tubuhmu butuh pemulihan untuk pertumbuhan otot yang maksimal. Streak apimu tetap terjaga!</p>
+                </div>
             @else
                 <div class="text-center" style="padding: 24px 0;">
                     <p class="text-muted mb-3">Belum ada latihan hari ini.</p>
-                    <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Mulai Latihan</a>
+                    <div class="d-flex justify-content-center flex-gap-sm">
+                        <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Mulai Latihan</a>
+                    </div>
                 </div>
             @endif
         </div>
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h3>Makanan Hari Ini</h3>
+        <div class="card-header flex-between align-center">
+            <h3 class="m-0">Makanan Hari Ini</h3>
             <a href="{{ route('foods.index') }}" class="btn btn-small btn-outline">+ Tambah</a>
         </div>
         <div class="card-body">
@@ -209,4 +247,41 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const restBtn = document.getElementById('btn-rest-day-toggle');
+    if (!restBtn) return;
+
+    restBtn.addEventListener('click', async function() {
+        restBtn.disabled = true;
+        try {
+            const res = await fetch("{{ route('rest-days.toggle') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ date: "{{ date('Y-m-d') }}" })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                // Reload to reflect all updated stats & streak instantly
+                window.location.reload();
+            } else {
+                alert(data.message || 'Gagal mengubah status Rest Day.');
+                restBtn.disabled = false;
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+            restBtn.disabled = false;
+        }
+    });
+});
+</script>
+@endpush
 @endsection

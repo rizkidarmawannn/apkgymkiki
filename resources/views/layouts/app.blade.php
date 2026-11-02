@@ -88,17 +88,32 @@
     <!-- Main Content -->
     <main class="main-content">
         @if(isset($activeWorkout) && $activeWorkout && !request()->routeIs('workouts.create') && !request()->routeIs('workouts.resume'))
-            <div class="ongoing-workout-floating-banner">
-                <div class="ongoing-banner-content">
-                    <span class="ongoing-pulse-dot"></span>
-                    <div>
-                        <strong class="d-block" style="font-size: 0.95rem;">⚡ Sesi Latihan Sedang Berjalan: {{ $activeWorkout->name }}</strong>
-                        <small class="text-muted">{{ $activeWorkout->workoutExercises->count() }} gerakan dicatat &bull; Progres otomatis tersimpan</small>
+            <div class="ongoing-workout-capsule mb-4">
+                <div class="capsule-info-row">
+                    <div class="capsule-radar-dot">
+                        <span class="radar-ping"></span>
+                        <span class="radar-core"></span>
+                    </div>
+                    <div class="capsule-text">
+                        <div class="capsule-title">
+                            <span class="capsule-tag">AKTIF</span>
+                            <strong class="capsule-name">{{ $activeWorkout->name }}</strong>
+                        </div>
+                        <div class="capsule-subtext">
+                            <span>{{ $activeWorkout->workoutExercises->count() }} gerakan</span>
+                            <span class="bullet-sep">&bull;</span>
+                            <span>⏱️ {{ $activeWorkout->duration ? $activeWorkout->duration . ' mnt' : 'Sesi aktif' }}</span>
+                            @if($activeWorkout->estimated_calories)
+                                <span class="bullet-sep">&bull;</span>
+                                <span>🔥 ~{{ $activeWorkout->estimated_calories }} kkal</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
-                <div class="ongoing-banner-action">
-                    <a href="{{ route('workouts.resume', $activeWorkout) }}" class="btn btn-warning btn-small" style="font-weight: 700; border-radius: 9999px;">
-                        ▶️ Lanjutkan Latihan
+                <div class="capsule-action">
+                    <a href="{{ route('workouts.resume', $activeWorkout) }}" class="btn-capsule-resume">
+                        <span>Lanjutkan</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;"><polyline points="9 18 15 12 9 6"/></svg>
                     </a>
                 </div>
             </div>

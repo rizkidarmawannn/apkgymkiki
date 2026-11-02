@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FoodLogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProgressController;
+use App\Http\Controllers\RestDayController;
 use App\Http\Controllers\WorkoutController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +52,9 @@ Route::middleware('auth')->group(function () {
     // Calendar (Hevy style consistency matrix & monthly view)
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::get('/calendar/data', [CalendarController::class, 'calendarData'])->name('calendar.data');
+
+    // Rest Days
+    Route::post('/rest-days/toggle', [RestDayController::class, 'toggle'])->name('rest-days.toggle');
 
     // Food
     Route::get('/foods', [FoodLogController::class, 'index'])->name('foods.index');

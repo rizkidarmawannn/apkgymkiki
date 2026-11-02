@@ -1409,24 +1409,165 @@ select.form-control {
 }
 
 /* ==========================================================================
-   ONGOING WORKOUT STYLES & LIVE STATUS
+   MODERN ONGOING WORKOUT CAPSULE (LIVE ACTIVITY / HEVY STYLE)
    ========================================================================== */
+.ongoing-workout-capsule {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(30, 41, 59, 0.92));
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 9999px;
+    padding: 8px 14px 8px 18px;
+    box-shadow: 0 10px 28px -5px rgba(0, 0, 0, 0.45), 0 0 16px rgba(245, 158, 11, 0.12);
+    margin-bottom: 1.25rem;
+    animation: fadeInBanner 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all var(--transition);
+}
+
+[data-theme="light"] .ongoing-workout-capsule {
+    background: linear-gradient(135deg, #ffffff, #fffbeb);
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+
+.capsule-info-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.capsule-radar-dot {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radar-core {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+}
+
+.radar-ping {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.6);
+    animation: pingRadar 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes pingRadar {
+    0% { transform: scale(0.9); opacity: 0.9; }
+    75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+.capsule-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.capsule-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.capsule-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.capsule-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.capsule-subtext {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bullet-sep {
+    opacity: 0.4;
+}
+
+.btn-capsule-resume {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff !important;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-capsule-resume:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+}
+
+@media (max-width: 640px) {
+    .ongoing-workout-capsule {
+        border-radius: var(--r-lg);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+    .capsule-action {
+        width: 100%;
+    }
+    .btn-capsule-resume {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Fallback for ongoing banner */
 .ongoing-workout-floating-banner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.05));
-    border: 1.5px solid var(--warning);
-    border-radius: var(--r-lg);
-    padding: 12px 18px;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(30, 41, 59, 0.92));
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    border-radius: 9999px;
+    padding: 10px 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     margin-bottom: 1.25rem;
-    animation: fadeInBanner 0.3s ease;
-}
-
-[data-theme="dark"] .ongoing-workout-floating-banner {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.08));
-    border-color: rgba(245, 158, 11, 0.7);
 }
 
 .ongoing-banner-content {
@@ -1446,45 +1587,14 @@ select.form-control {
 }
 
 @keyframes pulseRing {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-    }
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
-    }
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-    }
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 @keyframes fadeInBanner {
-    from {
-        opacity: 0;
-        transform: translateY(-6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@media (max-width: 640px) {
-    .ongoing-workout-floating-banner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .ongoing-banner-action {
-        width: 100%;
-        display: flex;
-    }
-    .ongoing-banner-action .btn {
-        width: 100%;
-        text-align: center;
-    }
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ==========================================================================
@@ -1926,257 +2036,229 @@ select.form-control {
     line-height: 1;
 }
 
-/* Dashboard TikTok Streak Card */
-.tiktok-streak-card {
+/* ==========================================================================
+   PRO STREAK CARD & MILESTONE FLAME TIERS (10, 50, 100+)
+   ========================================================================== */
+.streak-pro-card {
     position: relative;
-    background: linear-gradient(135deg, rgba(254, 242, 242, 0.95), rgba(255, 237, 213, 0.9));
-    border: 1.5px solid rgba(249, 115, 22, 0.35);
     border-radius: var(--r-xl);
-    padding: 22px 24px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.85));
+    border: 1.5px solid rgba(249, 115, 22, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(12px);
     overflow: hidden;
+    transition: all var(--transition);
+}
+
+[data-theme="light"] .streak-pro-card {
+    background: linear-gradient(135deg, #ffffff, #fff7ed);
+    border-color: rgba(249, 115, 22, 0.35);
     box-shadow: 0 8px 24px rgba(249, 115, 22, 0.12);
-    transition: transform var(--transition);
 }
 
-[data-theme="dark"] .tiktok-streak-card {
-    background: linear-gradient(135deg, #181216 0%, #20131A 50%, #1A1412 100%);
-    border-color: rgba(249, 115, 22, 0.4);
-    box-shadow: 0 8px 30px rgba(249, 115, 22, 0.18);
+/* Flame Tiers */
+/* Tier 0: Inactive / Cold */
+.streak-pro-card.flame-tier-0 {
+    border-color: rgba(148, 163, 184, 0.25);
+}
+.streak-flame-circle.tier-0 {
+    background: rgba(148, 163, 184, 0.12);
+    border: 1.5px solid rgba(148, 163, 184, 0.3);
 }
 
-/* Dynamic Flame Themes */
-.tiktok-streak-card.flame-theme-warm {
-    border-color: rgba(249, 115, 22, 0.5);
+/* Tier 1: 1-9 Hari (Orange Flame) */
+.streak-pro-card.flame-tier-1 {
+    border-color: rgba(249, 115, 22, 0.45);
+    box-shadow: 0 10px 30px rgba(249, 115, 22, 0.15);
 }
-
-.tiktok-streak-card.flame-theme-blazing {
-    border-color: rgba(239, 68, 68, 0.6);
-    box-shadow: 0 10px 32px rgba(239, 68, 68, 0.22);
+.streak-flame-circle.tier-1 {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(239, 68, 68, 0.25));
+    border: 2px solid #f97316;
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.45);
 }
+.milestone-fill.tier-1 { background: linear-gradient(90deg, #f97316, #ef4444); }
 
-.tiktok-streak-card.flame-theme-intense {
+/* Tier 2: 10-49 Hari (Electric Blue Flame) */
+.streak-pro-card.flame-tier-2 {
+    border-color: rgba(6, 182, 212, 0.55);
+    box-shadow: 0 10px 35px rgba(6, 182, 212, 0.22);
+}
+.streak-flame-circle.tier-2 {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(59, 130, 246, 0.3));
+    border: 2px solid #06b6d4;
+    box-shadow: 0 0 22px rgba(6, 182, 212, 0.55);
+}
+.milestone-fill.tier-2 { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+
+/* Tier 3: 50-99 Hari (Purple Plasma Flame) */
+.streak-pro-card.flame-tier-3 {
     border-color: rgba(168, 85, 247, 0.6);
-    box-shadow: 0 10px 32px rgba(168, 85, 247, 0.22);
+    box-shadow: 0 10px 40px rgba(168, 85, 247, 0.25);
 }
+.streak-flame-circle.tier-3 {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.3));
+    border: 2px solid #a855f7;
+    box-shadow: 0 0 24px rgba(168, 85, 247, 0.6);
+}
+.milestone-fill.tier-3 { background: linear-gradient(90deg, #a855f7, #ec4899); }
 
-.tiktok-streak-card.flame-theme-inferno {
+/* Tier 4: 100+ Hari (Golden Apex Crown Flame) */
+.streak-pro-card.flame-tier-4 {
     border-color: rgba(234, 179, 8, 0.7);
-    box-shadow: 0 12px 36px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 12px 45px rgba(234, 179, 8, 0.32);
 }
-
-.tiktok-streak-card.flame-theme-godlike {
-    border-color: #F59E0B;
-    background: linear-gradient(135deg, #261705 0%, #351610 50%, #241328 100%);
-    box-shadow: 0 14px 40px rgba(245, 158, 11, 0.4);
+.streak-flame-circle.tier-4 {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(249, 115, 22, 0.35));
+    border: 2px solid #eab308;
+    box-shadow: 0 0 30px rgba(234, 179, 8, 0.7);
 }
+.milestone-fill.tier-4 { background: linear-gradient(90deg, #eab308, #f59e0b, #ef4444); }
 
-.streak-card-inner {
+.streak-card-body {
     position: relative;
     z-index: 2;
 }
 
-.streak-header-row {
+.streak-top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    margin-bottom: 16px;
 }
 
-.streak-badge-hero {
+.streak-hero-group {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.flame-icon-wrapper {
-    width: 64px;
-    height: 64px;
+.streak-flame-circle {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #FFEDD5, #FEE2E2);
-    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+    font-size: 2rem;
     flex-shrink: 0;
+    transition: transform 0.2s ease;
 }
 
-[data-theme="dark"] .flame-icon-wrapper {
-    background: linear-gradient(135deg, #3B1C10, #31151F);
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.45);
-}
-
-.flame-emoji-hero {
-    font-size: 2.2rem;
+.streak-flame-emoji {
     line-height: 1;
 }
 
-/* Flame Animations */
-.flame-animated {
-    animation: flameBounce 1.8s infinite ease-in-out;
-}
-
-.flame-flicker {
-    animation: flameFlicker 1.2s infinite ease-in-out;
-}
-
-@keyframes flameBounce {
-    0%, 100% {
-        transform: scale(1) translateY(0);
-        box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
-    }
-    50% {
-        transform: scale(1.1) translateY(-3px);
-        box-shadow: 0 8px 26px rgba(239, 68, 68, 0.55);
-    }
-}
-
-@keyframes flameFlicker {
-    0%, 100% {
-        transform: scale(1) rotate(0deg);
-        filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
-    }
-    25% {
-        transform: scale(1.05) rotate(-3deg);
-        filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
-    }
-    75% {
-        transform: scale(0.96) rotate(3deg);
-        filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
-    }
-}
-
-@keyframes warningPulse {
-    0%, 100% {
-        box-shadow: 0 0 0 rgba(245, 158, 11, 0);
-    }
-    50% {
-        box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
-    }
-}
-
-.streak-counter-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.streak-number-row {
+.streak-count-row {
     display: flex;
     align-items: baseline;
     gap: 8px;
 }
 
-.streak-number {
-    font-size: 2.4rem;
+.streak-huge-number {
+    font-size: 2.6rem;
     font-weight: 800;
     line-height: 1;
-    background: linear-gradient(135deg, #EF4444, #F97316);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     letter-spacing: -0.03em;
+    color: var(--text-primary);
 }
 
-[data-theme="dark"] .streak-number {
-    background: linear-gradient(135deg, #F87171, #FB923C);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.streak-label {
+.streak-unit-label {
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-muted);
     letter-spacing: 0.05em;
 }
 
-.streak-status-badge {
+.streak-tier-badge {
     display: inline-flex;
     align-items: center;
-    font-size: 0.82rem;
+    gap: 6px;
+    font-size: 0.8rem;
     font-weight: 600;
+    padding: 3px 10px;
     border-radius: 9999px;
-    padding: 2px 10px;
-    width: fit-content;
-}
-
-.streak-status-badge.status-lit {
-    background: rgba(34, 197, 94, 0.15);
-    color: #16A34A;
-}
-
-[data-theme="dark"] .streak-status-badge.status-lit {
-    background: rgba(34, 197, 94, 0.2);
-    color: #4ADE80;
-}
-
-.streak-status-badge.status-warning {
-    background: rgba(245, 158, 11, 0.2);
-    color: #D97706;
-    animation: warningPulse 1.6s infinite ease-in-out;
-}
-
-[data-theme="dark"] .streak-status-badge.status-warning {
-    background: rgba(245, 158, 11, 0.25);
-    color: #FBBF24;
-}
-
-.streak-status-badge.status-extinguished {
     background: var(--bg-hover);
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
-.streak-best-badge {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--border);
+.badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+.dot-flame { background: #f97316; box-shadow: 0 0 6px #f97316; }
+.dot-yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.dot-warning { background: #eab308; }
+.dot-muted { background: var(--text-muted); }
+
+.streak-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.streak-record-pill {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-light);
     border-radius: var(--r-md);
-    padding: 8px 14px;
+    padding: 6px 14px;
     text-align: right;
-    backdrop-filter: blur(4px);
 }
 
-[data-theme="dark"] .streak-best-badge {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.best-label {
+.record-title {
     display: block;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     font-weight: 600;
 }
 
-.best-value {
-    font-size: 1.05rem;
+.record-days {
+    font-size: 1rem;
+    color: #f59e0b;
+}
+
+.btn-rest-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 9999px;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.08);
+    color: #f59e0b;
+    font-size: 0.82rem;
     font-weight: 700;
-    color: #F59E0B;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.streak-motivation-msg {
-    margin-bottom: 16px;
-    font-size: 0.9rem;
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.55);
-    padding: 10px 14px;
-    border-radius: var(--r-md);
+.btn-rest-toggle:hover {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: #f59e0b;
 }
 
-[data-theme="dark"] .streak-motivation-msg {
-    background: rgba(0, 0, 0, 0.25);
+.btn-rest-toggle.active {
+    background: #f59e0b;
+    color: #111827;
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
 }
 
-.streak-motivation-msg p {
-    margin: 0;
+.milestone-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
 }
 
-.streak-motivation-msg .warning-text {
-    color: #D97706;
-}
-
-[data-theme="dark"] .streak-motivation-msg .warning-text {
-    color: #FBBF24;
+.milestone-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.4s ease;
 }
 
 /* 7-Day Week Indicator */
@@ -2210,13 +2292,13 @@ select.form-control {
     min-width: 32px;
     padding: 4px 6px;
     border-radius: var(--r-sm);
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-light);
     font-size: 0.72rem;
 }
 
-[data-theme="dark"] .streak-day-item {
-    background: rgba(255, 255, 255, 0.04);
+[data-theme="light"] .streak-day-item {
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .streak-day-item.day-today {
@@ -2227,6 +2309,20 @@ select.form-control {
 .streak-day-item.day-done {
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(249, 115, 22, 0.4);
+}
+
+.streak-day-item.day-rest {
+    background: rgba(245, 158, 11, 0.14) !important;
+    border-color: rgba(245, 158, 11, 0.6) !important;
+}
+
+.streak-day-item.day-rest .day-name {
+    color: #f59e0b !important;
+    font-weight: 700;
+}
+
+.dot-rest {
+    filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
 }
 
 .streak-day-item .day-name {
@@ -2253,6 +2349,174 @@ select.form-control {
 .dot-empty {
     color: var(--text-muted);
     opacity: 0.4;
+}
+
+/* ==========================================================================
+   HEVY / STRONG STYLE EXERCISE BUILDER (NO NESTED CARD SLOP)
+   ========================================================================== */
+.workout-exercises-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.exercise-block {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: border-color var(--transition);
+}
+
+.exercise-block:focus-within {
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.exercise-block-header {
+    background: var(--bg-hover);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.exercise-number-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.exercise-category-badge {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    padding: 3px 8px;
+}
+
+.btn-remove-exercise {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--r-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.btn-remove-exercise:hover {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.exercise-sets-area {
+    background: var(--card-bg);
+}
+
+.set-item-row {
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--r-md);
+    padding: 6px 10px;
+    transition: border-color 0.15s ease;
+}
+
+.set-item-row:hover {
+    border-color: var(--border);
+}
+
+.set-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    min-width: 48px;
+    text-align: center;
+}
+
+.border-top-subtle {
+    border-top: 1px solid var(--border-light);
+}
+
+.btn-add-exercise-dashed {
+    background: rgba(99, 102, 241, 0.04);
+    border: 2px dashed rgba(99, 102, 241, 0.35);
+    border-radius: var(--r-lg);
+    padding: 14px;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-add-exercise-dashed:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+/* Cardio Mode styling */
+.exercise-block.exercise-cardio-mode {
+    border-left: 3px solid #f59e0b;
+}
+
+.exercise-block.exercise-cardio-mode .exercise-number-pill {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+/* Auto-duration status box in create view */
+.auto-duration-display-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 8px 12px;
+    height: 38px;
+}
+
+.auto-duration-icon {
+    font-size: 1rem;
+}
+
+.auto-duration-tag {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-left: auto;
+}
+
+/* ==========================================================================
+   CALENDAR REST DAY KUNING (YELLOW) STYLES
+   ========================================================================== */
+.hevy-day-box.active-restday {
+    background: #f59e0b !important;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.7) !important;
+}
+
+.calendar-day-cell.has-restday {
+    border-color: rgba(245, 158, 11, 0.55);
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.calendar-day-cell.has-restday .day-number {
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+.dot-rest-indicator {
+    color: #f59e0b;
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.6));
 }
 
 /* Streak Celebration Box in Workout Show */

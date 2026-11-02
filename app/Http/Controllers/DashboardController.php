@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FoodLog;
+use App\Models\RestDay;
 use App\Models\WeightLog;
 use App\Models\Workout;
 use Carbon\Carbon;
@@ -22,10 +23,21 @@ class DashboardController extends Controller
             ->first();
         $currentWeight = $latestWeight?->weight ?? $profile?->weight ?? 0;
 
-        // Today's calories
+        // Today's calories from food
         $todayCalories = FoodLog::where('user_id', $user->id)
             ->whereDate('date', $today)
             ->sum('calories');
+
+        // Today's calories burned from workouts
+        $todayCaloriesBurned = Workout::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->whereDate('date', $today)
+            ->sum('estimated_calories');
+
+        // Check if today is marked as Rest Day
+        $isRestDayToday = RestDay::where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->exists();
 
         // Workouts this week
         $weekStart = Carbon::now()->startOfWeek();
@@ -64,8 +76,8 @@ class DashboardController extends Controller
         if ($profile?->goal === 'gain_muscle') $calorieTarget = 2500;
 
         return view('dashboard.index', compact(
-            'user', 'currentWeight', 'todayCalories', 'workoutsThisWeek',
-            'targetWeight', 'todayWorkout', 'ongoingWorkout', 'todayFoods', 'calorieTarget'
+            'user', 'currentWeight', 'todayCalories', 'todayCaloriesBurned', 'isRestDayToday',
+            'workoutsThisWeek', 'targetWeight', 'todayWorkout', 'ongoingWorkout', 'todayFoods', 'calorieTarget'
         ));
     }
 }

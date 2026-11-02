@@ -6,13 +6,16 @@
 <div class="page-header flex-between align-center mb-4">
     <div>
         <h1 class="mb-1">{{ isset($activeWorkout) ? 'Latihan Sedang Berjalan' : 'Latihan Baru' }}</h1>
-        <p class="text-muted text-sm mb-0">Catat gerakan, set, berat dan waktu istirahatmu. Progres tersimpan otomatis.</p>
+        <p class="text-muted text-sm mb-0">Catat gerakan beban atau kardio. Waktu dan progres tersimpan otomatis.</p>
     </div>
-    <div class="d-flex align-center flex-gap-sm">
+    <div class="d-flex align-center flex-gap-sm flex-wrap">
+        <span id="live-calories-counter" class="badge badge-warning" style="font-size: 0.85rem; font-weight: 700; padding: 6px 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+            🔥 <span id="live-cal-val">{{ $activeWorkout->estimated_calories ?? 0 }}</span> kkal
+        </span>
         <span id="autosave-status" class="badge badge-secondary" style="font-size: 0.75rem; font-weight: 600; padding: 6px 10px;">
             ☁️ Tersimpan otomatis
         </span>
-        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Aktifkan/matikan suara">
+        <button type="button" id="audio-toggle-btn" class="audio-status-pill" title="Aktifkan/matikan suara timer">
             <span id="audio-icon">🔊</span> <span id="audio-label">Suara: ON</span>
         </button>
         <div class="workout-stopwatch badge badge-primary" id="workout-stopwatch" style="font-size: 0.95rem; font-weight: 700; padding: 6px 14px; border-radius: 9999px;">
@@ -31,7 +34,7 @@
     </div>
 @endif
 
-<!-- Banner Istirahat (tersembunyi secara default) -->
+<!-- Banner Istirahat -->
 <div id="rest-timer-banner" class="card mb-4 p-3" style="display: none; border: 1px solid var(--warning); background: var(--warning-light);">
     <div class="flex-between align-center mb-2">
         <span class="badge badge-warning" style="font-weight: 700; font-size: 0.75rem; letter-spacing: 0.04em;">⏳ WAKTU ISTIRAHAT</span>
@@ -54,362 +57,442 @@
 <form action="{{ route('workouts.store') }}" method="POST" id="workout-form">
     @csrf
     <input type="hidden" name="workout_id" id="workout-id" value="{{ $activeWorkout->id ?? '' }}">
+    <input type="hidden" name="duration" id="duration" value="{{ $activeWorkout->duration ?? 1 }}">
     <input type="hidden" name="duration_seconds" id="duration-seconds" value="{{ $activeWorkout->duration_seconds ?? ($activeWorkout && $activeWorkout->duration ? $activeWorkout->duration * 60 : 0) }}">
 
+    <!-- Detail Sesi Card -->
     <div class="card mb-4">
         <div class="card-header">
             <h3>Detail Latihan</h3>
         </div>
         <div class="card-body">
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label>Tipe Latihan</label>
                 <div class="workout-type-selector">
                     <button type="button" class="btn btn-outline type-btn" data-type="Push">Push</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Pull">Pull</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Legs">Legs</button>
                     <button type="button" class="btn btn-outline type-btn" data-type="Full Body">Full Body</button>
+                    <button type="button" class="btn btn-outline type-btn" data-type="Cardio">Kardio</button>
                     <button type="button" class="btn btn-outline type-btn active" data-type="Custom">Kustom</button>
                 </div>
                 <input type="hidden" name="type" id="workout-type" value="Custom">
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="workout-name">Nama Latihan</label>
-                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Dumbbell" value="{{ $activeWorkout->name ?? old('name', 'Latihan Kustom') }}">
+                <input type="text" name="name" id="workout-name" class="form-control" required placeholder="cth. Rutinitas Barbell & Kardio" value="{{ $activeWorkout->name ?? old('name', 'Latihan Kustom') }}">
             </div>
 
-            <div class="form-row flex-gap">
+            <div class="form-row flex-gap mb-3">
                 <div class="form-group col flex-1">
                     <div class="flex-between align-center mb-1">
-                        <label for="date" class="m-0">Tanggal</label>
+                        <label for="date" class="m-0">Tanggal Latihan</label>
                         <button type="button" class="btn btn-small btn-outline py-0 px-2" id="set-today-date-btn" style="font-size: 0.75rem; border-radius: 9999px;" title="Ubah tanggal latihan ke hari ini">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px; vertical-align: -1px; margin-right: 3px; display: inline-block;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>Set Hari Ini
+                            Set Hari Ini
                         </button>
                     </div>
                     <input type="date" name="date" id="date" class="form-control" value="{{ $selectedDate ?? (isset($activeWorkout->date) ? \Carbon\Carbon::parse($activeWorkout->date)->format('Y-m-d') : date('Y-m-d')) }}" required>
                 </div>
+
+                <!-- Durasi Otomatis (Tanpa input manual angka yang membingungkan) -->
                 <div class="form-group col flex-1">
-                    <label for="duration">Durasi (menit)</label>
-                    <input type="number" name="duration" id="duration" class="form-control" placeholder="otomatis atau isi manual" value="{{ $activeWorkout->duration ?? '' }}">
+                    <label class="mb-1 d-block">Durasi Latihan (Otomatis)</label>
+                    <div class="auto-duration-display-box">
+                        <span class="auto-duration-icon">⏱️</span>
+                        <span id="auto-duration-live" class="tabular-nums fw-bold">00:00</span>
+                        <span class="auto-duration-tag">Tercatat Otomatis</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="notes">Catatan</label>
-                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Gimana rasanya? (opsional)">{{ $activeWorkout->notes ?? '' }}</textarea>
+            <div class="form-group mb-0">
+                <label for="notes">Catatan Sesi (Opsional)</label>
+                <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="Gimana rasanya latihan hari ini?">{{ $activeWorkout->notes ?? '' }}</textarea>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header flex-between align-center">
-            <h3>Gerakan</h3>
-            <button type="button" class="btn btn-small btn-primary" id="add-exercise-btn">+ Tambah Gerakan</button>
+    <!-- Gerakan & Kardio Section (Hevy App Style - Clean Unified Cards) -->
+    <div class="workout-exercises-section mb-4">
+        <div class="flex-between align-center mb-3">
+            <div>
+                <h3 class="m-0">Daftar Gerakan & Kardio</h3>
+                <span class="text-xs text-muted">Bisa mencatat angkat beban (kg & reps) maupun kardio (durasi menit & jarak km).</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-small" id="add-exercise-btn">
+                + Tambah Gerakan
+            </button>
         </div>
-        <div class="card-body">
-            <div id="exercises-container">
-                @php
-                    $exercisesList = (isset($activeWorkout) && $activeWorkout->workoutExercises->count() > 0) 
-                        ? $activeWorkout->workoutExercises 
-                        : null;
-                @endphp
 
-                @if($exercisesList)
-                    @foreach($exercisesList as $exIdx => $we)
-                        <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="{{ $exIdx }}">
-                            <div class="flex-between align-center mb-3">
-                                <h4 class="m-0 exercise-title text-primary">Gerakan {{ $exIdx + 1 }}</h4>
-                                <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Hapus</button>
-                            </div>
+        <div id="exercises-container">
+            @php
+                $exercisesList = (isset($activeWorkout) && $activeWorkout->workoutExercises->count() > 0) 
+                    ? $activeWorkout->workoutExercises 
+                    : null;
+            @endphp
 
-                            <input type="hidden" name="exercises[{{ $exIdx }}][sets]" class="exercise-total-sets" value="{{ $we->sets ?? 1 }}">
-                            <input type="hidden" name="exercises[{{ $exIdx }}][reps]" class="exercise-first-reps" value="{{ $we->reps ?? 10 }}">
-
-                            <div class="form-group mb-3">
-                                <label>Pilih Gerakan</label>
-                                <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select" required>
-                                    <option value="">-- Pilih Gerakan --</option>
-                                    <option value="custom" {{ ($we->exercise && $we->exercise->category === 'Custom') ? 'selected' : '' }} style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
-                                    @if(isset($exercises))
-                                        @foreach($exercises as $category => $exGrp)
-                                            <optgroup label="── {{ strtoupper($category) }} ──">
-                                                @foreach($exGrp as $ex)
-                                                    <option value="{{ $ex->id }}" {{ $we->exercise_id == $ex->id ? 'selected' : '' }}>{{ $ex->name }} ({{ $ex->muscle }})</option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
-                                    @endif
-                                </select>
-                                <div class="custom-name-wrapper mt-2" style="{{ ($we->exercise && $we->exercise->category === 'Custom') ? 'display: block;' : 'display: none;' }}">
-                                    <input type="text" name="exercises[{{ $exIdx }}][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row)..." value="{{ ($we->exercise && $we->exercise->category === 'Custom') ? $we->exercise->name : '' }}">
-                                </div>
-                            </div>
-
-                            <div class="sets-wrapper mb-3">
-                                <div class="flex-between align-center mb-2">
-                                    <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SET & PROGRES</span>
-                                    <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
-                                </div>
-
-                                <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
-                                    <span class="set-col-label">Set</span>
-                                    <span class="flex-1">Berat (kg)</span>
-                                    <span class="flex-1">Reps</span>
-                                    <span class="set-col-timer text-center">Timer</span>
-                                    <span class="set-col-action"></span>
-                                </div>
-
-                                <div class="sets-list-container">
-                                    @php
-                                        $setsData = (!empty($we->sets_data) && is_array($we->sets_data)) ? $we->sets_data : [];
-                                        if (empty($setsData)) {
-                                            for ($s = 1; $s <= ($we->sets ?? 3); $s++) {
-                                                $setsData[] = ['set' => $s, 'weight' => $we->weight ?? 0, 'reps' => $we->reps ?? 10];
-                                            }
-                                        }
-                                    @endphp
-                                    @foreach($setsData as $sIdx => $sd)
-                                        <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="{{ $sIdx }}">
-                                            <span class="badge badge-secondary set-badge">Set {{ $sIdx + 1 }}</span>
-                                            <div class="flex-1">
-                                                <input type="number" step="0.5" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="{{ $sd['weight'] ?? 0 }}">
-                                            </div>
-                                            <div class="flex-1">
-                                                <input type="number" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="{{ $sd['reps'] ?? 10 }}">
-                                            </div>
-                                            <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                                ▶️ Mulai
-                                            </button>
-                                            <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-0">
-                                <input type="text" name="exercises[{{ $exIdx }}][notes]" class="form-control" placeholder="Catatan cth. Set 3 terasa berat (opsional)" value="{{ $we->notes ?? '' }}">
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <!-- Gerakan awal jika belum ada sesi ongoing -->
-                    <div class="exercise-row card mb-4 p-3 bg-light" data-exercise-index="0">
-                        <div class="flex-between align-center mb-3">
-                            <h4 class="m-0 exercise-title text-primary">Gerakan 1</h4>
-                            <button type="button" class="btn btn-small btn-danger remove-exercise-btn">&times; Hapus</button>
-                        </div>
-
-                        <input type="hidden" name="exercises[0][sets]" class="exercise-total-sets" value="3">
-                        <input type="hidden" name="exercises[0][reps]" class="exercise-first-reps" value="10">
-
-                        <div class="form-group mb-3">
-                            <label>Pilih Gerakan</label>
-                            <select name="exercises[0][exercise_id]" class="form-control exercise-select" required>
-                                <option value="">-- Pilih Gerakan --</option>
-                                <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
-                                @if(isset($exercises))
-                                    @foreach($exercises as $category => $exList)
-                                        <optgroup label="── {{ strtoupper($category) }} ──">
-                                            @foreach($exList as $ex)
-                                                <option value="{{ $ex->id }}">{{ $ex->name }} ({{ $ex->muscle }})</option>
+            @if($exercisesList)
+                @foreach($exercisesList as $exIdx => $we)
+                    @php
+                        $isCardio = strtolower($we->exercise->category ?? '') === 'cardio';
+                    @endphp
+                    <div class="exercise-block mb-3 {{ $isCardio ? 'exercise-cardio-mode' : '' }}" data-exercise-index="{{ $exIdx }}" data-is-cardio="{{ $isCardio ? '1' : '0' }}">
+                        <div class="exercise-block-header flex-between align-center">
+                            <div class="d-flex align-center flex-gap-sm flex-1">
+                                <span class="exercise-number-pill">#{{ $exIdx + 1 }}</span>
+                                <div class="flex-1">
+                                    <select name="exercises[{{ $exIdx }}][exercise_id]" class="form-control exercise-select" required>
+                                        <option value="">-- Pilih Gerakan / Kardio --</option>
+                                        <option value="custom" {{ ($we->exercise && $we->exercise->category === 'Custom') ? 'selected' : '' }} style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
+                                        @if(isset($exercises))
+                                            @foreach($exercises as $category => $exGrp)
+                                                <optgroup label="── {{ strtoupper($category) }} ──">
+                                                    @foreach($exGrp as $ex)
+                                                        <option value="{{ $ex->id }}" data-category="{{ strtolower($ex->category) }}" {{ $we->exercise_id == $ex->id ? 'selected' : '' }}>
+                                                            {{ $ex->name }} ({{ $ex->muscle }})
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
                                             @endforeach
-                                        </optgroup>
-                                    @endforeach
-                                @endif
-                            </select>
-                            <div class="custom-name-wrapper mt-2" style="display: none;">
-                                <input type="text" name="exercises[0][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row, Hip Thrust)...">
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex align-center flex-gap-sm ml-2">
+                                <span class="badge exercise-category-badge {{ $isCardio ? 'badge-warning' : 'badge-info' }}">
+                                    {{ $isCardio ? 'KARDIO' : strtoupper($we->exercise->category ?? 'BEBAN') }}
+                                </span>
+                                <button type="button" class="btn-remove-exercise remove-exercise-btn" title="Hapus gerakan ini">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
                             </div>
                         </div>
 
-                        <div class="sets-wrapper mb-3">
-                            <div class="flex-between align-center mb-2">
-                                <span class="text-xs text-muted" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">SET & PROGRES</span>
-                                <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
-                            </div>
+                        <div class="custom-name-wrapper mt-2 px-3" style="{{ ($we->exercise && $we->exercise->category === 'Custom') ? 'display: block;' : 'display: none;' }}">
+                            <input type="text" name="exercises[{{ $exIdx }}][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row atau Treadmill)..." value="{{ ($we->exercise && $we->exercise->category === 'Custom') ? $we->exercise->name : '' }}">
+                        </div>
 
-                            <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-2 text-xs text-muted">
-                                <span class="set-col-label">Set</span>
-                                <span class="flex-1">Berat (kg)</span>
-                                <span class="flex-1">Reps</span>
+                        <input type="hidden" name="exercises[{{ $exIdx }}][sets]" class="exercise-total-sets" value="{{ $we->sets ?? 1 }}">
+                        <input type="hidden" name="exercises[{{ $exIdx }}][reps]" class="exercise-first-reps" value="{{ $we->reps ?? 10 }}">
+
+                        <!-- Sets Table Container -->
+                        <div class="exercise-sets-area px-3 pt-2 pb-3">
+                            <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-1 text-xs text-muted">
+                                <span class="set-col-label">{{ $isCardio ? 'Sesi' : 'Set' }}</span>
+                                <span class="flex-1 col-field-1-label">{{ $isCardio ? 'Durasi (menit)' : 'Berat (kg)' }}</span>
+                                <span class="flex-1 col-field-2-label">{{ $isCardio ? 'Jarak km (opsional)' : 'Reps' }}</span>
                                 <span class="set-col-timer text-center">Timer</span>
                                 <span class="set-col-action"></span>
                             </div>
 
                             <div class="sets-list-container">
-                                <!-- Set 1 -->
-                                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
-                                    <span class="badge badge-secondary set-badge">Set 1</span>
-                                    <div class="flex-1">
-                                        <input type="number" step="0.5" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                @php
+                                    $setsData = (!empty($we->sets_data) && is_array($we->sets_data)) ? $we->sets_data : [];
+                                    if (empty($setsData)) {
+                                        for ($s = 1; $s <= ($we->sets ?? 3); $s++) {
+                                            $setsData[] = ['set' => $s, 'weight' => $we->weight ?? 0, 'reps' => $we->reps ?? 10, 'duration' => $we->reps ?? 15, 'distance' => 0];
+                                        }
+                                    }
+                                @endphp
+                                @foreach($setsData as $sIdx => $sd)
+                                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="{{ $sIdx }}">
+                                        <span class="badge badge-secondary set-badge">{{ $isCardio ? 'Sesi ' . ($sIdx + 1) : 'Set ' . ($sIdx + 1) }}</span>
+                                        <div class="flex-1 field-1-wrap">
+                                            @if($isCardio)
+                                                <input type="number" step="1" min="1" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][duration]" class="form-control form-control-sm set-duration-input" placeholder="menit" required value="{{ $sd['duration'] ?? 15 }}">
+                                            @else
+                                                <input type="number" step="0.5" min="0" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="{{ $sd['weight'] ?? 0 }}">
+                                            @endif
+                                        </div>
+                                        <div class="flex-1 field-2-wrap">
+                                            @if($isCardio)
+                                                <input type="number" step="0.1" min="0" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][distance]" class="form-control form-control-sm set-distance-input" placeholder="km" value="{{ $sd['distance'] ?? '' }}">
+                                            @else
+                                                <input type="number" step="1" min="0" name="exercises[{{ $exIdx }}][sets_list][{{ $sIdx }}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="{{ $sd['reps'] ?? 10 }}">
+                                            @endif
+                                        </div>
+                                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
+                                            ▶️ Mulai
+                                        </button>
+                                        <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                                     </div>
-                                    <div class="flex-1">
-                                        <input type="number" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                                    </div>
-                                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                        ▶️ Mulai
-                                    </button>
-                                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
-                                </div>
+                                @endforeach
+                            </div>
 
-                                <!-- Set 2 -->
-                                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
-                                    <span class="badge badge-secondary set-badge">Set 2</span>
-                                    <div class="flex-1">
-                                        <input type="number" step="0.5" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="number" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                                    </div>
-                                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                        ▶️ Mulai
-                                    </button>
-                                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
-                                </div>
-
-                                <!-- Set 3 -->
-                                <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
-                                    <span class="badge badge-secondary set-badge">Set 3</span>
-                                    <div class="flex-1">
-                                        <input type="number" step="0.5" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="number" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                                    </div>
-                                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                                        ▶️ Mulai
-                                    </button>
-                                    <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                            <div class="flex-between align-center mt-2 pt-2 border-top-subtle">
+                                <button type="button" class="btn btn-small btn-outline add-set-btn">
+                                    + Tambah {{ $isCardio ? 'Sesi' : 'Set' }}
+                                </button>
+                                <div class="flex-1 ml-3">
+                                    <input type="text" name="exercises[{{ $exIdx }}][notes]" class="form-control form-control-sm" placeholder="Catatan gerakan (opsional, cth. beban dinaikkan)..." value="{{ $we->notes ?? '' }}">
                                 </div>
                             </div>
                         </div>
-
-                        <div class="form-group mb-0">
-                            <input type="text" name="exercises[0][notes]" class="form-control" placeholder="Catatan cth. Set 3 terasa berat (opsional)">
+                    </div>
+                @endforeach
+            @else
+                <!-- Initial Clean Exercise Block 1 -->
+                <div class="exercise-block mb-3" data-exercise-index="0" data-is-cardio="0">
+                    <div class="exercise-block-header flex-between align-center">
+                        <div class="d-flex align-center flex-gap-sm flex-1">
+                            <span class="exercise-number-pill">#1</span>
+                            <div class="flex-1">
+                                <select name="exercises[0][exercise_id]" class="form-control exercise-select" required>
+                                    <option value="">-- Pilih Gerakan / Kardio --</option>
+                                    <option value="custom" style="font-weight: bold; color: var(--primary);">➕ Lainnya / Gerakan Kustom...</option>
+                                    @if(isset($exercises))
+                                        @foreach($exercises as $category => $exGrp)
+                                            <optgroup label="── {{ strtoupper($category) }} ──">
+                                                @foreach($exGrp as $ex)
+                                                    <option value="{{ $ex->id }}" data-category="{{ strtolower($ex->category) }}">
+                                                        {{ $ex->name }} ({{ $ex->muscle }})
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex align-center flex-gap-sm ml-2">
+                            <span class="badge exercise-category-badge badge-info">BEBAN</span>
+                            <button type="button" class="btn-remove-exercise remove-exercise-btn" title="Hapus gerakan ini">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            </button>
                         </div>
                     </div>
-                @endif
-            </div>
+
+                    <div class="custom-name-wrapper mt-2 px-3" style="display: none;">
+                        <input type="text" name="exercises[0][custom_name]" class="form-control custom-name-input" placeholder="Nama gerakan kustom (cth. Barbell Row atau Treadmill)...">
+                    </div>
+
+                    <input type="hidden" name="exercises[0][sets]" class="exercise-total-sets" value="3">
+                    <input type="hidden" name="exercises[0][reps]" class="exercise-first-reps" value="10">
+
+                    <div class="exercise-sets-area px-3 pt-2 pb-3">
+                        <div class="sets-table-header d-flex align-center flex-gap-sm mb-1 px-1 text-xs text-muted">
+                            <span class="set-col-label">Set</span>
+                            <span class="flex-1 col-field-1-label">Berat (kg)</span>
+                            <span class="flex-1 col-field-2-label">Reps</span>
+                            <span class="set-col-timer text-center">Timer</span>
+                            <span class="set-col-action"></span>
+                        </div>
+
+                        <div class="sets-list-container">
+                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="0">
+                                <span class="badge badge-secondary set-badge">Set 1</span>
+                                <div class="flex-1 field-1-wrap">
+                                    <input type="number" step="0.5" min="0" name="exercises[0][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                </div>
+                                <div class="flex-1 field-2-wrap">
+                                    <input type="number" step="1" min="0" name="exercises[0][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                                </div>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                                <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
+                            </div>
+                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="1">
+                                <span class="badge badge-secondary set-badge">Set 2</span>
+                                <div class="flex-1 field-1-wrap">
+                                    <input type="number" step="0.5" min="0" name="exercises[0][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                </div>
+                                <div class="flex-1 field-2-wrap">
+                                    <input type="number" step="1" min="0" name="exercises[0][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                                </div>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                                <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
+                            </div>
+                            <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="2">
+                                <span class="badge badge-secondary set-badge">Set 3</span>
+                                <div class="flex-1 field-1-wrap">
+                                    <input type="number" step="0.5" min="0" name="exercises[0][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                                </div>
+                                <div class="flex-1 field-2-wrap">
+                                    <input type="number" step="1" min="0" name="exercises[0][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                                </div>
+                                <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                                <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
+                            </div>
+                        </div>
+
+                        <div class="flex-between align-center mt-2 pt-2 border-top-subtle">
+                            <button type="button" class="btn btn-small btn-outline add-set-btn">+ Tambah Set</button>
+                            <div class="flex-1 ml-3">
+                                <input type="text" name="exercises[0][notes]" class="form-control form-control-sm" placeholder="Catatan gerakan (opsional)...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
+
+        <button type="button" class="btn-add-exercise-dashed w-100" id="add-exercise-bottom-btn">
+            + Tambah Gerakan Baru / Kardio
+        </button>
     </div>
 
-    <div class="form-actions mb-5">
-        <button type="submit" class="btn btn-success btn-block btn-large" style="font-size: 1.15rem; padding: 15px; font-weight: 700;">
-            ✓ Selesai Latihan & Simpan
-        </button>
-        <button type="button" id="discard-workout-btn" class="btn btn-outline btn-block mt-3" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.4); font-size: 0.95rem; padding: 10px;">
-            ✕ Batalkan Sesi Latihan Ini
-        </button>
+    <!-- Action Bar -->
+    <div class="card p-3 workout-bottom-actions">
+        <div class="flex-between align-center flex-wrap flex-gap">
+            <button type="button" id="discard-workout-btn" class="btn btn-outline" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.4);">
+                Batalkan Sesi Latihan
+            </button>
+            <div class="d-flex align-center flex-gap-sm">
+                <button type="submit" class="btn btn-primary" id="save-workout-btn" style="padding: 10px 24px; font-weight: 700; font-size: 1rem;">
+                    ✓ Selesai Latihan & Simpan
+                </button>
+            </div>
+        </div>
     </div>
 </form>
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 0. AUDIO SYNTHESIS ENGINE (Web Audio API) ---
-        const GymAudio = {
-            ctx: null,
-            muted: false,
-            init() {
-                if (!this.ctx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (AudioContext) this.ctx = new AudioContext();
-                }
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            },
-            playTone(freq, type, duration, delay = 0, volume = 0.3) {
-                if (this.muted) return;
-                try {
-                    this.init();
-                    if (!this.ctx) return;
-                    const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, now + delay);
-                    
-                    gain.gain.setValueAtTime(volume, now + delay);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration);
-                    
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    
-                    osc.start(now + delay);
-                    osc.stop(now + delay + duration);
-                } catch(e) { console.warn('Audio play error:', e); }
-            },
-            playStartSound() {
-                this.playTone(587.33, 'sine', 0.12, 0, 0.35);     // D5
-                this.playTone(880.00, 'triangle', 0.22, 0.11, 0.4); // A5
-            },
-            playCountdownTick() {
-                this.playTone(880, 'sine', 0.08, 0, 0.25);
-            },
-            playRestCompleteSound() {
-                this.playTone(523.25, 'sine', 0.15, 0, 0.35);       // C5
-                this.playTone(659.25, 'sine', 0.15, 0.14, 0.35);    // E5
-                this.playTone(1046.50, 'triangle', 0.5, 0.28, 0.45); // C6
-            }
-        };
+        const cardioIds = {!! json_encode($cardioExerciseIds ?? []) !!};
 
-        // Audio toggle button listener
+        // --- 1. WEB AUDIO API SYNTHESIZER ---
+        const GymAudio = (function() {
+            let ctx = null;
+            let enabled = localStorage.getItem('gymtracker_sound_enabled') !== 'false';
+
+            function getContext() {
+                if (!ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) ctx = new AudioCtx();
+                }
+                if (ctx && ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                return ctx;
+            }
+
+            function playTone(freq, duration, type = 'sine', gainVal = 0.25) {
+                if (!enabled) return;
+                try {
+                    const c = getContext();
+                    if (!c) return;
+                    const osc = c.createOscillator();
+                    const gain = c.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, c.currentTime);
+                    gain.gain.setValueAtTime(gainVal, c.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(c.destination);
+                    osc.start();
+                    osc.stop(c.currentTime + duration);
+                } catch (e) {
+                    console.warn('Audio tone error:', e);
+                }
+            }
+
+            return {
+                isEnabled: () => enabled,
+                toggle: function() {
+                    enabled = !enabled;
+                    localStorage.setItem('gymtracker_sound_enabled', enabled ? 'true' : 'false');
+                    return enabled;
+                },
+                playStartSound: function() {
+                    playTone(523.25, 0.15, 'sine', 0.2);
+                    setTimeout(() => playTone(659.25, 0.2, 'sine', 0.25), 120);
+                },
+                playCountdownTick: function() {
+                    playTone(880, 0.08, 'sine', 0.15);
+                },
+                playRestCompleteSound: function() {
+                    playTone(587.33, 0.12, 'sine', 0.3);
+                    setTimeout(() => playTone(783.99, 0.15, 'sine', 0.3), 120);
+                    setTimeout(() => playTone(1046.50, 0.4, 'triangle', 0.35), 260);
+                }
+            };
+        })();
+
+        // Sound Toggle Pill
         const audioBtn = document.getElementById('audio-toggle-btn');
         const audioIcon = document.getElementById('audio-icon');
         const audioLabel = document.getElementById('audio-label');
+        function updateAudioUI(isOn) {
+            if (audioIcon) audioIcon.textContent = isOn ? '🔊' : '🔇';
+            if (audioLabel) audioLabel.textContent = isOn ? 'Suara: ON' : 'Suara: OFF';
+            if (audioBtn) audioBtn.classList.toggle('muted', !isOn);
+        }
+        updateAudioUI(GymAudio.isEnabled());
         if (audioBtn) {
             audioBtn.addEventListener('click', function() {
-                GymAudio.muted = !GymAudio.muted;
-                if (GymAudio.muted) {
-                    audioIcon.textContent = '🔇';
-                    audioLabel.textContent = 'Suara: OFF';
-                    audioBtn.style.background = '#F1F5F9';
-                    audioBtn.style.color = '#64748B';
-                    audioBtn.style.borderColor = '#CBD5E1';
-                } else {
-                    GymAudio.init();
-                    GymAudio.playStartSound();
-                    audioIcon.textContent = '🔊';
-                    audioLabel.textContent = 'Suara: ON';
-                    audioBtn.style.background = '#EFF6FF';
-                    audioBtn.style.color = '#1D4ED8';
-                    audioBtn.style.borderColor = '#BFDBFE';
-                }
+                const nowOn = GymAudio.toggle();
+                updateAudioUI(nowOn);
+                if (nowOn) GymAudio.playStartSound();
             });
         }
 
-        // --- 1. OVERALL WORKOUT STOPWATCH ---
-        const stopwatchDisplay = document.getElementById('stopwatch-display');
-        const durationInput = document.getElementById('duration');
+        // --- 2. LIVE CONTINUOUS STOPWATCH ENGINE ---
         const durationSecondsInput = document.getElementById('duration-seconds');
-        
-        let totalSeconds = parseInt(durationSecondsInput ? durationSecondsInput.value : 0) || 0;
+        const durationInput = document.getElementById('duration');
+        const stopwatchDisplay = document.getElementById('stopwatch-display');
+        const autoDurationLive = document.getElementById('auto-duration-live');
+
+        let totalSeconds = parseInt(durationSecondsInput?.value) || 0;
 
         function formatStopwatch(sec) {
-            const mins = String(Math.floor(sec / 60)).padStart(2, '0');
-            const secs = String(sec % 60).padStart(2, '0');
-            return `${mins}:${secs}`;
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         stopwatchDisplay.textContent = formatStopwatch(totalSeconds);
-        if (durationInput && !durationInput.value && totalSeconds > 0) {
-            durationInput.value = Math.max(1, Math.round(totalSeconds / 60));
-        }
+        if (autoDurationLive) autoDurationLive.textContent = formatStopwatch(totalSeconds);
 
         setInterval(function() {
             totalSeconds++;
-            stopwatchDisplay.textContent = formatStopwatch(totalSeconds);
-            if (durationSecondsInput) {
-                durationSecondsInput.value = totalSeconds;
-            }
-            if (durationInput) {
-                durationInput.value = Math.max(1, Math.round(totalSeconds / 60));
-            }
+            const fmt = formatStopwatch(totalSeconds);
+            stopwatchDisplay.textContent = fmt;
+            if (autoDurationLive) autoDurationLive.textContent = fmt;
+            if (durationSecondsInput) durationSecondsInput.value = totalSeconds;
+            if (durationInput) durationInput.value = Math.max(1, Math.ceil(totalSeconds / 60));
+            updateLiveCalories();
         }, 1000);
 
-        // --- 2. REST TIMER & SET STOPWATCH ---
+        // --- 3. LIVE CALORIES CALCULATION ---
+        const liveCalVal = document.getElementById('live-cal-val');
+        function updateLiveCalories() {
+            if (!liveCalVal) return;
+            const currentMins = Math.max(1, Math.ceil(totalSeconds / 60));
+            let totalVolume = 0;
+            let cardioMins = 0;
+            let strengthSets = 0;
+
+            container.querySelectorAll('.exercise-block').forEach(block => {
+                const isCardio = block.getAttribute('data-is-cardio') === '1';
+                block.querySelectorAll('.set-item-row').forEach(sRow => {
+                    if (isCardio) {
+                        const durInput = sRow.querySelector('.set-duration-input');
+                        cardioMins += (parseFloat(durInput?.value) || 0);
+                    } else {
+                        const w = parseFloat(sRow.querySelector('.set-weight-input')?.value) || 0;
+                        const r = parseInt(sRow.querySelector('.set-reps-input')?.value) || 0;
+                        totalVolume += (w * r);
+                        strengthSets++;
+                    }
+                });
+            });
+
+            const userWeight = 70; // standard approx weight
+            const effectiveMins = Math.max(currentMins, cardioMins + (strengthSets * 2));
+            const strengthMins = Math.max(0, effectiveMins - cardioMins);
+
+            const strengthCal = (strengthMins * 5.5 * 3.5 * userWeight / 200) + (totalVolume * 0.015);
+            const cardioCal = (cardioMins * 8.0 * 3.5 * userWeight / 200);
+
+            let est = Math.round(strengthCal + cardioCal);
+            if (est <= 0 && (strengthSets > 0 || cardioMins > 0)) {
+                est = (strengthSets * 18) + Math.round(cardioMins * 8);
+            }
+            liveCalVal.textContent = Math.max(0, est);
+        }
+
+        // --- 4. REST TIMER & SET STOPWATCH ---
         let restInterval = null;
         let restTotal = 60;
         let restRemaining = 60;
@@ -464,7 +547,7 @@
             });
         });
 
-        // --- 3. WORKOUT TYPE SELECTOR ---
+        // --- 5. WORKOUT TYPE SELECTOR ---
         const typeBtns = document.querySelectorAll('.type-btn');
         const typeInput = document.getElementById('workout-type');
         const nameInput = document.getElementById('workout-name');
@@ -484,38 +567,95 @@
             });
         });
 
-        // --- 4. DYNAMIC EXERCISE & MULTI-SET MANAGEMENT ---
+        // --- 6. EXERCISE & CARDIO MULTI-SET MANAGEMENT ---
         const container = document.getElementById('exercises-container');
         const addBtn = document.getElementById('add-exercise-btn');
+        const addBottomBtn = document.getElementById('add-exercise-bottom-btn');
 
-        function setupExerciseEvents(row) {
-            const select = row.querySelector('.exercise-select');
-            const customWrapper = row.querySelector('.custom-name-wrapper');
-            const customInput = row.querySelector('.custom-name-input');
-            const setsContainer = row.querySelector('.sets-list-container');
-            const addSetBtn = row.querySelector('.add-set-btn');
+        function setupExerciseEvents(block) {
+            const select = block.querySelector('.exercise-select');
+            const customWrapper = block.querySelector('.custom-name-wrapper');
+            const customInput = block.querySelector('.custom-name-input');
+            const setsContainer = block.querySelector('.sets-list-container');
+            const addSetBtn = block.querySelector('.add-set-btn');
+            const categoryBadge = block.querySelector('.exercise-category-badge');
+            const headerCol1 = block.querySelector('.col-field-1-label');
+            const headerCol2 = block.querySelector('.col-field-2-label');
+            const headerSetCol = block.querySelector('.set-col-label');
+
+            function applyCardioOrStrengthMode(isCardio) {
+                block.setAttribute('data-is-cardio', isCardio ? '1' : '0');
+                block.classList.toggle('exercise-cardio-mode', isCardio);
+
+                if (categoryBadge) {
+                    categoryBadge.textContent = isCardio ? 'KARDIO' : 'BEBAN';
+                    categoryBadge.className = `badge exercise-category-badge ${isCardio ? 'badge-warning' : 'badge-info'}`;
+                }
+
+                if (headerSetCol) headerSetCol.textContent = isCardio ? 'Sesi' : 'Set';
+                if (headerCol1) headerCol1.textContent = isCardio ? 'Durasi (menit)' : 'Berat (kg)';
+                if (headerCol2) headerCol2.textContent = isCardio ? 'Jarak km (opsional)' : 'Reps';
+                if (addSetBtn) addSetBtn.textContent = isCardio ? '+ Tambah Sesi Kardio' : '+ Tambah Set';
+
+                // Re-render rows to switch inputs between kg/reps and menit/km
+                const rows = setsContainer.querySelectorAll('.set-item-row');
+                const exIdx = Array.from(container.querySelectorAll('.exercise-block')).indexOf(block);
+
+                rows.forEach((sRow, sIdx) => {
+                    const badge = sRow.querySelector('.set-badge');
+                    if (badge) badge.textContent = isCardio ? `Sesi ${sIdx + 1}` : `Set ${sIdx + 1}`;
+
+                    const f1Wrap = sRow.querySelector('.field-1-wrap');
+                    const f2Wrap = sRow.querySelector('.field-2-wrap');
+
+                    if (isCardio) {
+                        if (!sRow.querySelector('.set-duration-input')) {
+                            const oldReps = sRow.querySelector('.set-reps-input')?.value || 15;
+                            f1Wrap.innerHTML = `<input type="number" step="1" min="1" name="exercises[${exIdx}][sets_list][${sIdx}][duration]" class="form-control form-control-sm set-duration-input" placeholder="menit" required value="${oldReps}">`;
+                            f2Wrap.innerHTML = `<input type="number" step="0.1" min="0" name="exercises[${exIdx}][sets_list][${sIdx}][distance]" class="form-control form-control-sm set-distance-input" placeholder="km" value="">`;
+                        }
+                    } else {
+                        if (!sRow.querySelector('.set-weight-input')) {
+                            const oldDur = sRow.querySelector('.set-duration-input')?.value || 0;
+                            f1Wrap.innerHTML = `<input type="number" step="0.5" min="0" name="exercises[${exIdx}][sets_list][${sIdx}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="0">`;
+                            f2Wrap.innerHTML = `<input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][${sIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">`;
+                        }
+                    }
+                });
+
+                updateLiveCalories();
+            }
 
             if (select) {
                 select.addEventListener('change', function() {
-                    if (this.value === 'custom') {
-                        customWrapper.style.display = 'block';
+                    const val = this.value;
+                    const selectedOpt = this.options[this.selectedIndex];
+                    const cat = selectedOpt ? selectedOpt.getAttribute('data-category') : '';
+
+                    const isCardio = cat === 'cardio' || cardioIds.includes(parseInt(val));
+
+                    if (val === 'custom') {
+                        if (customWrapper) customWrapper.style.display = 'block';
                         if (customInput) customInput.required = true;
                     } else {
-                        customWrapper.style.display = 'none';
+                        if (customWrapper) customWrapper.style.display = 'none';
                         if (customInput) customInput.required = false;
                     }
+
+                    applyCardioOrStrengthMode(isCardio);
                     scheduleAutoSave();
                 });
             }
 
-            // Remove Exercise Row
-            const removeBtn = row.querySelector('.remove-exercise-btn');
+            // Remove Exercise Block
+            const removeBtn = block.querySelector('.remove-exercise-btn');
             if (removeBtn) {
                 removeBtn.addEventListener('click', function() {
-                    if (container.querySelectorAll('.exercise-row').length > 1) {
-                        row.remove();
+                    if (container.querySelectorAll('.exercise-block').length > 1) {
+                        block.remove();
                         updateExerciseIndices();
                         scheduleAutoSave();
+                        updateLiveCalories();
                     } else {
                         alert('Harus ada minimal satu gerakan.');
                     }
@@ -524,28 +664,37 @@
 
             function updateSetBadges() {
                 const setRows = setsContainer.querySelectorAll('.set-item-row');
-                const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
-                
-                const totalSetsInput = row.querySelector('.exercise-total-sets');
-                const firstRepsInput = row.querySelector('.exercise-first-reps');
+                const exIdx = Array.from(container.querySelectorAll('.exercise-block')).indexOf(block);
+                const isCardio = block.getAttribute('data-is-cardio') === '1';
+
+                const totalSetsInput = block.querySelector('.exercise-total-sets');
+                const firstRepsInput = block.querySelector('.exercise-first-reps');
                 if (totalSetsInput) {
                     totalSetsInput.value = setRows.length;
                     totalSetsInput.setAttribute('name', `exercises[${exIdx}][sets]`);
                 }
                 if (firstRepsInput) {
-                    firstRepsInput.value = setRows[0]?.querySelector('.set-reps-input')?.value || 10;
+                    const firstVal = isCardio
+                        ? (setRows[0]?.querySelector('.set-duration-input')?.value || 15)
+                        : (setRows[0]?.querySelector('.set-reps-input')?.value || 10);
+                    firstRepsInput.value = firstVal;
                     firstRepsInput.setAttribute('name', `exercises[${exIdx}][reps]`);
                 }
 
                 setRows.forEach((sRow, sIdx) => {
-                    sRow.querySelector('.set-badge').textContent = `Set ${sIdx + 1}`;
+                    const badge = sRow.querySelector('.set-badge');
+                    if (badge) badge.textContent = isCardio ? `Sesi ${sIdx + 1}` : `Set ${sIdx + 1}`;
                     sRow.setAttribute('data-set-index', sIdx);
-                    
+
                     const weightInput = sRow.querySelector('.set-weight-input');
                     const repsInput = sRow.querySelector('.set-reps-input');
-                    
+                    const durInput = sRow.querySelector('.set-duration-input');
+                    const distInput = sRow.querySelector('.set-distance-input');
+
                     if (weightInput) weightInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][weight]`);
                     if (repsInput) repsInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][reps]`);
+                    if (durInput) durInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][duration]`);
+                    if (distInput) distInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][distance]`);
                 });
             }
 
@@ -557,6 +706,7 @@
                             sRow.remove();
                             updateSetBadges();
                             scheduleAutoSave();
+                            updateLiveCalories();
                         } else {
                             alert('Setiap gerakan harus memiliki minimal 1 set.');
                         }
@@ -588,7 +738,7 @@
                             this.classList.remove('btn-warning');
                             this.classList.add('btn-success');
                             this.textContent = `✓ ${setRowSecs}s`;
-                            
+
                             startRestTimer(60);
                             scheduleAutoSave();
                         } else if (status === 'done') {
@@ -603,7 +753,7 @@
 
             setsContainer.querySelectorAll('.set-item-row').forEach(sRow => setupSetRowEvents(sRow));
 
-            // Auto-fill weights on set 1 change
+            // Auto-fill weights on set 1 change for strength
             const firstWeight = setsContainer.querySelector('.set-item-row:first-child .set-weight-input');
             if (firstWeight) {
                 firstWeight.addEventListener('input', function() {
@@ -616,6 +766,7 @@
                             }
                         }
                     });
+                    updateLiveCalories();
                 });
             }
 
@@ -624,145 +775,171 @@
                 addSetBtn.addEventListener('click', function() {
                     const setRows = setsContainer.querySelectorAll('.set-item-row');
                     const nextSetIdx = setRows.length;
+                    const exIdx = Array.from(container.querySelectorAll('.exercise-block')).indexOf(block);
+                    const isCardio = block.getAttribute('data-is-cardio') === '1';
+
                     const lastRow = setRows[setRows.length - 1];
-                    const lastWeight = lastRow ? lastRow.querySelector('.set-weight-input').value : '';
-                    const lastReps = lastRow ? lastRow.querySelector('.set-reps-input').value : '10';
+                    let field1Html = '';
+                    let field2Html = '';
+
+                    if (isCardio) {
+                        const lastDur = lastRow?.querySelector('.set-duration-input')?.value || '15';
+                        field1Html = `<input type="number" step="1" min="1" name="exercises[${exIdx}][sets_list][${nextSetIdx}][duration]" class="form-control form-control-sm set-duration-input" placeholder="menit" required value="${lastDur}">`;
+                        field2Html = `<input type="number" step="0.1" min="0" name="exercises[${exIdx}][sets_list][${nextSetIdx}][distance]" class="form-control form-control-sm set-distance-input" placeholder="km" value="">`;
+                    } else {
+                        const lastWeight = lastRow?.querySelector('.set-weight-input')?.value || '';
+                        const lastReps = lastRow?.querySelector('.set-reps-input')?.value || '10';
+                        field1Html = `<input type="number" step="0.5" min="0" name="exercises[${exIdx}][sets_list][${nextSetIdx}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="${lastWeight}">`;
+                        field2Html = `<input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][${nextSetIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="${lastReps}">`;
+                    }
 
                     const newSetRow = document.createElement('div');
-                    newSetRow.className = 'set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded';
+                    newSetRow.className = 'set-item-row d-flex align-center flex-gap-sm mb-2';
                     newSetRow.setAttribute('data-set-index', nextSetIdx);
-                    
-                    const exIdx = Array.from(container.querySelectorAll('.exercise-row')).indexOf(row);
 
                     newSetRow.innerHTML = `
-                        <span class="badge badge-secondary set-badge">Set ${nextSetIdx + 1}</span>
-                        <div class="flex-1">
-                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][${nextSetIdx}][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required value="${lastWeight}">
-                        </div>
-                        <div class="flex-1">
-                            <input type="number" name="exercises[${exIdx}][sets_list][${nextSetIdx}][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="${lastReps}">
-                        </div>
-                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                            ▶️ Mulai
-                        </button>
-                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                        <span class="badge badge-secondary set-badge">${isCardio ? 'Sesi ' + (nextSetIdx + 1) : 'Set ' + (nextSetIdx + 1)}</span>
+                        <div class="flex-1 field-1-wrap">${field1Html}</div>
+                        <div class="flex-1 field-2-wrap">${field2Html}</div>
+                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                        <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
                     `;
 
                     setupSetRowEvents(newSetRow);
                     setsContainer.appendChild(newSetRow);
                     updateSetBadges();
                     scheduleAutoSave();
+                    updateLiveCalories();
                 });
             }
         }
 
         function updateExerciseIndices() {
-            const rows = container.querySelectorAll('.exercise-row');
-            rows.forEach((row, exIdx) => {
-                row.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
-                row.setAttribute('data-exercise-index', exIdx);
+            const blocks = container.querySelectorAll('.exercise-block');
+            blocks.forEach((block, exIdx) => {
+                const numPill = block.querySelector('.exercise-number-pill');
+                if (numPill) numPill.textContent = '#' + (exIdx + 1);
+                block.setAttribute('data-exercise-index', exIdx);
 
-                const select = row.querySelector('.exercise-select');
+                const select = block.querySelector('.exercise-select');
                 if (select) select.setAttribute('name', `exercises[${exIdx}][exercise_id]`);
-                const customInput = row.querySelector('.custom-name-input');
+                const customInput = block.querySelector('.custom-name-input');
                 if (customInput) customInput.setAttribute('name', `exercises[${exIdx}][custom_name]`);
-                const notesInput = row.querySelector('input[name*="[notes]"]');
+                const notesInput = block.querySelector('input[name*="[notes]"]');
                 if (notesInput) notesInput.setAttribute('name', `exercises[${exIdx}][notes]`);
 
-                const totalSetsInput = row.querySelector('.exercise-total-sets');
-                const firstRepsInput = row.querySelector('.exercise-first-reps');
+                const totalSetsInput = block.querySelector('.exercise-total-sets');
+                const firstRepsInput = block.querySelector('.exercise-first-reps');
                 if (totalSetsInput) totalSetsInput.setAttribute('name', `exercises[${exIdx}][sets]`);
                 if (firstRepsInput) firstRepsInput.setAttribute('name', `exercises[${exIdx}][reps]`);
 
-                const setRows = row.querySelectorAll('.set-item-row');
+                const setRows = block.querySelectorAll('.set-item-row');
                 setRows.forEach((sRow, sIdx) => {
                     const weightInput = sRow.querySelector('.set-weight-input');
                     const repsInput = sRow.querySelector('.set-reps-input');
+                    const durInput = sRow.querySelector('.set-duration-input');
+                    const distInput = sRow.querySelector('.set-distance-input');
+
                     if (weightInput) weightInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][weight]`);
                     if (repsInput) repsInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][reps]`);
+                    if (durInput) durInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][duration]`);
+                    if (distInput) distInput.setAttribute('name', `exercises[${exIdx}][sets_list][${sIdx}][distance]`);
                 });
             });
         }
 
-        // Attach events to all existing rows
-        container.querySelectorAll('.exercise-row').forEach(row => setupExerciseEvents(row));
+        // Attach events to all existing blocks
+        container.querySelectorAll('.exercise-block').forEach(block => setupExerciseEvents(block));
 
-        // Add Exercise Button
-        const initialTemplateRow = container.querySelector('.exercise-row') ? container.querySelector('.exercise-row').cloneNode(true) : null;
+        // Add Exercise Button handler
+        function createNewExerciseBlock() {
+            const exIdx = container.querySelectorAll('.exercise-block').length;
+            const templateBlock = container.querySelector('.exercise-block');
+            if (!templateBlock) return;
 
-        if (addBtn) {
-            addBtn.addEventListener('click', function() {
-                const exIdx = container.querySelectorAll('.exercise-row').length;
-                const templateRow = container.querySelector('.exercise-row') || initialTemplateRow;
-                if (!templateRow) return;
-                const newExRow = templateRow.cloneNode(true);
+            const newBlock = templateBlock.cloneNode(true);
+            newBlock.setAttribute('data-exercise-index', exIdx);
+            newBlock.setAttribute('data-is-cardio', '0');
+            newBlock.classList.remove('exercise-cardio-mode');
 
-                newExRow.querySelector('.exercise-title').textContent = 'Gerakan ' + (exIdx + 1);
-                newExRow.setAttribute('data-exercise-index', exIdx);
+            const numPill = newBlock.querySelector('.exercise-number-pill');
+            if (numPill) numPill.textContent = '#' + (exIdx + 1);
 
-                const select = newExRow.querySelector('.exercise-select');
-                if (select) select.selectedIndex = 0;
+            const select = newBlock.querySelector('.exercise-select');
+            if (select) select.selectedIndex = 0;
 
-                const customWrapper = newExRow.querySelector('.custom-name-wrapper');
-                if (customWrapper) customWrapper.style.display = 'none';
+            const catBadge = newBlock.querySelector('.exercise-category-badge');
+            if (catBadge) {
+                catBadge.textContent = 'BEBAN';
+                catBadge.className = 'badge exercise-category-badge badge-info';
+            }
 
-                const customInput = newExRow.querySelector('.custom-name-input');
-                if (customInput) customInput.value = '';
+            const customWrapper = newBlock.querySelector('.custom-name-wrapper');
+            if (customWrapper) customWrapper.style.display = 'none';
 
-                const notesInput = newExRow.querySelector('input[name*="[notes]"]');
-                if (notesInput) notesInput.value = '';
+            const customInput = newBlock.querySelector('.custom-name-input');
+            if (customInput) customInput.value = '';
 
-                const setsContainer = newExRow.querySelector('.sets-list-container');
-                setsContainer.innerHTML = `
-                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="0">
-                        <span class="badge badge-secondary set-badge">Set 1</span>
-                        <div class="flex-1">
-                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                        </div>
-                        <div class="flex-1">
-                            <input type="number" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                        </div>
-                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                            ▶️ Mulai
-                        </button>
-                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+            const notesInput = newBlock.querySelector('input[name*="[notes]"]');
+            if (notesInput) notesInput.value = '';
+
+            const headerSetCol = newBlock.querySelector('.set-col-label');
+            if (headerSetCol) headerSetCol.textContent = 'Set';
+            const headerCol1 = newBlock.querySelector('.col-field-1-label');
+            if (headerCol1) headerCol1.textContent = 'Berat (kg)';
+            const headerCol2 = newBlock.querySelector('.col-field-2-label');
+            if (headerCol2) headerCol2.textContent = 'Reps';
+            const addSetBtn = newBlock.querySelector('.add-set-btn');
+            if (addSetBtn) addSetBtn.textContent = '+ Tambah Set';
+
+            const setsContainer = newBlock.querySelector('.sets-list-container');
+            setsContainer.innerHTML = `
+                <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="0">
+                    <span class="badge badge-secondary set-badge">Set 1</span>
+                    <div class="flex-1 field-1-wrap">
+                        <input type="number" step="0.5" min="0" name="exercises[${exIdx}][sets_list][0][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                     </div>
-                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="1">
-                        <span class="badge badge-secondary set-badge">Set 2</span>
-                        <div class="flex-1">
-                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                        </div>
-                        <div class="flex-1">
-                            <input type="number" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                        </div>
-                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                            ▶️ Mulai
-                        </button>
-                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                    <div class="flex-1 field-2-wrap">
+                        <input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][0][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
                     </div>
-                    <div class="set-item-row d-flex align-center flex-gap-sm mb-2 p-2 rounded" data-set-index="2">
-                        <span class="badge badge-secondary set-badge">Set 3</span>
-                        <div class="flex-1">
-                            <input type="number" step="0.5" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
-                        </div>
-                        <div class="flex-1">
-                            <input type="number" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
-                        </div>
-                        <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">
-                            ▶️ Mulai
-                        </button>
-                        <button type="button" class="btn btn-small btn-outline remove-set-btn">&times;</button>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                    <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
+                </div>
+                <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="1">
+                    <span class="badge badge-secondary set-badge">Set 2</span>
+                    <div class="flex-1 field-1-wrap">
+                        <input type="number" step="0.5" min="0" name="exercises[${exIdx}][sets_list][1][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
                     </div>
-                `;
+                    <div class="flex-1 field-2-wrap">
+                        <input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][1][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                    </div>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                    <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
+                </div>
+                <div class="set-item-row d-flex align-center flex-gap-sm mb-2" data-set-index="2">
+                    <span class="badge badge-secondary set-badge">Set 3</span>
+                    <div class="flex-1 field-1-wrap">
+                        <input type="number" step="0.5" min="0" name="exercises[${exIdx}][sets_list][2][weight]" class="form-control form-control-sm set-weight-input" placeholder="kg" required>
+                    </div>
+                    <div class="flex-1 field-2-wrap">
+                        <input type="number" step="1" min="0" name="exercises[${exIdx}][sets_list][2][reps]" class="form-control form-control-sm set-reps-input" placeholder="reps" required value="10">
+                    </div>
+                    <button type="button" class="btn btn-small btn-outline set-row-timer-btn" data-status="idle">▶️ Mulai</button>
+                    <button type="button" class="btn btn-small btn-outline remove-set-btn" title="Hapus set">&times;</button>
+                </div>
+            `;
 
-                setupExerciseEvents(newExRow);
-                container.appendChild(newExRow);
-                updateExerciseIndices();
-                scheduleAutoSave();
-            });
+            setupExerciseEvents(newBlock);
+            container.appendChild(newBlock);
+            updateExerciseIndices();
+            scheduleAutoSave();
+            updateLiveCalories();
         }
 
-        // --- 5. AUTOMATIC PERSISTENCE & AUTOSAVE ENGINE ---
+        if (addBtn) addBtn.addEventListener('click', createNewExerciseBlock);
+        if (addBottomBtn) addBottomBtn.addEventListener('click', createNewExerciseBlock);
+
+        // --- 7. AUTOMATIC AUTOSAVE & PERSISTENCE ---
         const autosaveStatusEl = document.getElementById('autosave-status');
         const workoutForm = document.getElementById('workout-form');
         const workoutIdInput = document.getElementById('workout-id');
@@ -770,7 +947,6 @@
         let isSaving = false;
         let isSubmitting = false;
 
-        // "Set Hari Ini" button
         const setTodayBtn = document.getElementById('set-today-date-btn');
         if (setTodayBtn) {
             setTodayBtn.addEventListener('click', function() {
@@ -788,22 +964,36 @@
 
         function serializeWorkout() {
             const exercises = [];
-            container.querySelectorAll('.exercise-row').forEach((row, exIdx) => {
-                const select = row.querySelector('.exercise-select');
-                const customInput = row.querySelector('.custom-name-input');
-                const notesInput = row.querySelector('input[name*="[notes]"]');
+            container.querySelectorAll('.exercise-block').forEach((block, exIdx) => {
+                const select = block.querySelector('.exercise-select');
+                const customInput = block.querySelector('.custom-name-input');
+                const notesInput = block.querySelector('input[name*="[notes]"]');
                 const exerciseId = select ? select.value : '';
                 const customName = customInput ? customInput.value : '';
                 const notes = notesInput ? notesInput.value : '';
+                const isCardio = block.getAttribute('data-is-cardio') === '1';
 
                 const setsList = [];
-                row.querySelectorAll('.sets-list-container .set-item-row').forEach((sRow, sIdx) => {
-                    const weightInput = sRow.querySelector('.set-weight-input');
-                    const repsInput = sRow.querySelector('.set-reps-input');
-                    setsList.push({
-                        weight: weightInput ? (parseFloat(weightInput.value) || 0) : 0,
-                        reps: repsInput ? (parseInt(repsInput.value) || 0) : 0,
-                    });
+                block.querySelectorAll('.sets-list-container .set-item-row').forEach((sRow, sIdx) => {
+                    if (isCardio) {
+                        const durInput = sRow.querySelector('.set-duration-input');
+                        const distInput = sRow.querySelector('.set-distance-input');
+                        setsList.push({
+                            duration: durInput ? (parseFloat(durInput.value) || 0) : 0,
+                            distance: distInput ? (parseFloat(distInput.value) || 0) : 0,
+                            weight: 0,
+                            reps: durInput ? (parseInt(durInput.value) || 0) : 0,
+                        });
+                    } else {
+                        const weightInput = sRow.querySelector('.set-weight-input');
+                        const repsInput = sRow.querySelector('.set-reps-input');
+                        setsList.push({
+                            weight: weightInput ? (parseFloat(weightInput.value) || 0) : 0,
+                            reps: repsInput ? (parseInt(repsInput.value) || 0) : 0,
+                            duration: 0,
+                            distance: 0,
+                        });
+                    }
                 });
 
                 if (exerciseId) {
@@ -821,7 +1011,7 @@
                 name: nameInput ? (nameInput.value || 'Latihan Baru') : 'Latihan Baru',
                 date: document.getElementById('date').value,
                 duration_seconds: totalSeconds,
-                duration: Math.max(1, Math.round(totalSeconds / 60)),
+                duration: Math.max(1, Math.ceil(totalSeconds / 60)),
                 notes: document.getElementById('notes').value,
                 exercises: exercises,
             };
@@ -845,7 +1035,6 @@
             saveLocalBackup();
 
             const data = serializeWorkout();
-            // Don't autosave to server if workout has no name and no exercises chosen
             if (!data.name && data.exercises.length === 0) return;
 
             isSaving = true;
@@ -872,6 +1061,9 @@
                     if (json.workout_id && workoutIdInput && !isSubmitting) {
                         workoutIdInput.value = json.workout_id;
                     }
+                    if (json.estimated_calories !== undefined && liveCalVal) {
+                        liveCalVal.textContent = json.estimated_calories;
+                    }
                     if (autosaveStatusEl) {
                         autosaveStatusEl.textContent = `☁️ Tersimpan (${json.saved_at || 'otomatis'})`;
                         autosaveStatusEl.className = 'badge badge-secondary';
@@ -897,8 +1089,14 @@
 
         // Listen on inputs
         if (workoutForm) {
-            workoutForm.addEventListener('input', scheduleAutoSave);
-            workoutForm.addEventListener('change', scheduleAutoSave);
+            workoutForm.addEventListener('input', function() {
+                scheduleAutoSave();
+                updateLiveCalories();
+            });
+            workoutForm.addEventListener('change', function() {
+                scheduleAutoSave();
+                updateLiveCalories();
+            });
 
             workoutForm.addEventListener('submit', function() {
                 isSubmitting = true;
@@ -907,18 +1105,19 @@
                 if (durationSecondsInput) {
                     durationSecondsInput.value = totalSeconds;
                 }
+                if (durationInput) {
+                    durationInput.value = Math.max(1, Math.ceil(totalSeconds / 60));
+                }
                 localStorage.removeItem('gymtracker_ongoing_workout');
             });
         }
 
-        // Periodic background autosave every 20s
         const periodicAutosaveInterval = setInterval(function() {
             if (totalSeconds > 0 && !isSubmitting) {
                 triggerAutoSave();
             }
         }, 20000);
 
-        // Discard / Cancel workout button
         const discardBtn = document.getElementById('discard-workout-btn');
         if (discardBtn) {
             discardBtn.addEventListener('click', function() {
@@ -947,7 +1146,6 @@
             });
         }
 
-        // Save local backup when navigating away or minimizing app
         window.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden' && !isSubmitting) {
                 saveLocalBackup();
@@ -959,6 +1157,8 @@
                 saveLocalBackup();
             }
         });
+
+        updateLiveCalories();
     });
 </script>
 @endpush

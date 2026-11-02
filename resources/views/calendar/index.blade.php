@@ -9,7 +9,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             <span>Kalender & Konsistensi</span>
         </h1>
-        <p class="text-muted text-sm mb-0">Tren latihan tahunan seperti Hevy app dan rekap kehadiran latihanmu.</p>
+        <p class="text-muted text-sm mb-0">Tren latihan tahunan, hari istirahat pemulihan, dan rekap konsistensi.</p>
     </div>
     <div class="d-flex align-center flex-gap-sm">
         <a href="{{ route('workouts.create') }}" class="btn btn-primary">+ Mulai Latihan</a>
@@ -24,17 +24,13 @@
     </div>
     <div class="stat-card">
         <h3>Streak Konsistensi</h3>
-        <p class="stat-value text-warning">
-            @if(isset($streakData) && $streakData['current_streak'] > 0)
-                <span style="font-size: 1.1em;">🔥</span> {{ $streakData['current_streak'] }}
-                <small class="text-muted text-sm fw-medium">({{ $streakData['flame_title'] }})</small>
-            @else
-                <span style="font-size: 1.1em;">🕯️</span> 0 <small class="text-muted text-sm fw-medium">hari</small>
-            @endif
+        <p class="stat-value" style="color: {{ $streakData['flame_color'] ?? '#f59e0b' }};">
+            <span style="font-size: 1.1em;">{{ $streakData['flame_emoji'] ?? '🔥' }}</span> {{ $streakData['current_streak'] }}
+            <small class="text-muted text-sm fw-medium">({{ $streakData['flame_title'] }})</small>
         </p>
     </div>
     <div class="stat-card">
-        <h3>Hari Aktif</h3>
+        <h3>Hari Aktif (Latihan + Rest)</h3>
         <p class="stat-value text-accent">{{ $activeDaysYear }} <small class="text-muted text-sm fw-medium">hari</small></p>
     </div>
     <div class="stat-card">
@@ -55,11 +51,11 @@
         <div class="d-flex align-center flex-gap-sm">
             <h2 class="hevy-year-title">{{ $year }}</h2>
             <span class="badge badge-info" style="font-size: 0.8rem; background: rgba(37, 99, 235, 0.2); color: #60A5FA; border: 1px solid rgba(96, 165, 250, 0.4);">
-                🔥 Tren Konsistensi Hevy
+                🔥 Tren Konsistensi
             </span>
         </div>
         <div class="text-sm" style="color: #94A3B8;">
-            Klik pada kotak tanggal untuk melihat latihan yang dilakukan
+            Klik pada kotak tanggal untuk melihat latihan atau mengubah Rest Day
         </div>
     </div>
 
@@ -102,7 +98,7 @@
     <div class="hevy-legend">
         <div class="hevy-legend-item">
             <span class="hevy-legend-box" style="background: #1E293B;"></span>
-            <span>Istirahat</span>
+            <span>Kosong</span>
         </div>
         <div class="hevy-legend-item">
             <span class="hevy-legend-box" style="background: #2563EB; box-shadow: 0 0 4px #2563EB;"></span>
@@ -110,6 +106,10 @@
         </div>
         <div class="hevy-legend-item">
             <span class="hevy-legend-box" style="background: #F59E0B; box-shadow: 0 0 4px #F59E0B;"></span>
+            <span>Hari Istirahat (Rest Day)</span>
+        </div>
+        <div class="hevy-legend-item">
+            <span class="hevy-legend-box" style="background: #F97316; box-shadow: 0 0 4px #F97316;"></span>
             <span>Sedang Berjalan</span>
         </div>
         <div class="hevy-legend-item">
@@ -130,9 +130,12 @@
             <button type="button" class="calendar-nav-btn" id="next-month-btn" title="Bulan Berikutnya">▶</button>
             <button type="button" class="calendar-nav-btn" id="today-month-btn" style="font-size: 0.8rem; font-weight: 600;">Hari Ini</button>
         </div>
-        <div>
+        <div class="d-flex align-center flex-gap-sm">
             <span class="badge badge-success" id="monthly-count-pill" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
-                🔥 <span id="monthly-count-number">0</span> Hari Latihan Bulan Ini
+                🔥 <span id="monthly-count-number">0</span> Hari Latihan
+            </span>
+            <span class="badge badge-warning" id="monthly-rest-pill" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+                🟡 <span id="monthly-rest-number">0</span> Hari Rest
             </span>
         </div>
     </div>
@@ -160,7 +163,7 @@
         <div class="modal-header flex-between align-center">
             <h3 class="m-0" id="modal-date-title" style="display: flex; align-items: center; gap: 6px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                <span>Detail Latihan</span>
+                <span>Detail Tanggal</span>
             </h3>
             <button type="button" class="modal-close-btn" id="close-calendar-modal">&times;</button>
         </div>
@@ -173,9 +176,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const yearData = {!! json_encode($calendarData ?? ['year' => $year, 'workouts_by_date' => []]) !!};
+        const yearData = {!! json_encode($calendarData ?? ['year' => $year, 'workouts_by_date' => [], 'rest_days_by_date' => []]) !!};
         const selectedYear = {{ $year }};
         const workoutsMap = yearData.workouts_by_date || {};
+        let restDaysMap = yearData.rest_days_by_date || {};
 
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -193,16 +197,9 @@
             if (!weeksContainer) return;
             weeksContainer.innerHTML = '';
 
-            // Start from Jan 1st of selectedYear
             const jan1 = new Date(selectedYear, 0, 1);
-            // Day of week: 0=Sun, 1=Mon, ..., 6=Sat
-            // We want Monday=0, Tuesday=1, ..., Sunday=6
             const jan1Day = (jan1.getDay() === 0) ? 6 : (jan1.getDay() - 1);
-
-            // Compute starting date so the first column starts on Monday
             const gridStart = new Date(selectedYear, 0, 1 - jan1Day);
-
-            // End at Dec 31st of selectedYear
             const dec31 = new Date(selectedYear, 11, 31);
             const dec31Day = (dec31.getDay() === 0) ? 6 : (dec31.getDay() - 1);
             const gridEnd = new Date(selectedYear, 11, 31 + (6 - dec31Day));
@@ -230,11 +227,14 @@
                     const dayWorkouts = workoutsMap[dateKey] || [];
                     const hasCompleted = dayWorkouts.some(w => w.status === 'completed');
                     const hasOngoing = dayWorkouts.some(w => w.status === 'in_progress');
+                    const isRestDay = !!restDaysMap[dateKey];
 
                     if (hasCompleted) {
                         box.classList.add('active-workout');
                     } else if (hasOngoing) {
                         box.classList.add('active-ongoing');
+                    } else if (isRestDay) {
+                        box.classList.add('active-restday');
                     }
 
                     if (dateKey === todayStr) {
@@ -243,10 +243,11 @@
                         box.classList.add('is-future');
                     }
 
-                    // Tooltip text format: dd/mm/yyyy
                     const ddmmyyyy = `${d}/${m}/${y}`;
-                    const workoutCount = dayWorkouts.length;
-                    box.title = `${ddmmyyyy} ${workoutCount > 0 ? `(${workoutCount} latihan)` : ''}`;
+                    let titleStr = ddmmyyyy;
+                    if (hasCompleted) titleStr += ` (${dayWorkouts.length} latihan)`;
+                    else if (isRestDay) titleStr += ` (Hari Istirahat / Rest Day)`;
+                    box.title = titleStr;
 
                     box.addEventListener('click', function() {
                         openDayModal(dateKey, dayWorkouts);
@@ -262,7 +263,6 @@
                     curWeekCol.className = 'hevy-week-col';
                 }
 
-                // Next day
                 curDate.setDate(curDate.getDate() + 1);
             }
 
@@ -277,12 +277,13 @@
         let currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         const monthHeading = document.getElementById('calendar-month-heading');
         const countNumber = document.getElementById('monthly-count-number');
+        const restNumber = document.getElementById('monthly-rest-number');
         const daysGrid = document.getElementById('calendar-days-grid');
         const prevBtn = document.getElementById('prev-month-btn');
         const nextBtn = document.getElementById('next-month-btn');
         const todayBtn = document.getElementById('today-month-btn');
 
-        async function renderMonthlyCalendar() {
+        function renderMonthlyCalendar() {
             if (!daysGrid) return;
             daysGrid.innerHTML = '';
 
@@ -301,8 +302,8 @@
                 monthHeading.textContent = firstDay.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             }
 
-            // Hitung total latihan di bulan ini
             let monthCompletedCount = 0;
+            let monthRestCount = 0;
 
             // Padding bulan lalu
             for (let i = startPadding - 1; i >= 0; i--) {
@@ -326,12 +327,16 @@
                 const dayWorkouts = workoutsMap[dateKey] || [];
                 const hasCompleted = dayWorkouts.some(w => w.status === 'completed');
                 const hasOngoing = dayWorkouts.some(w => w.status === 'in_progress');
+                const isRestDay = !!restDaysMap[dateKey];
 
                 if (hasCompleted) {
                     cell.classList.add('has-workout');
                     monthCompletedCount++;
                 } else if (hasOngoing) {
                     cell.classList.add('has-ongoing');
+                } else if (isRestDay) {
+                    cell.classList.add('has-restday');
+                    monthRestCount++;
                 }
 
                 let indicatorHtml = '';
@@ -339,6 +344,8 @@
                     indicatorHtml = `<span class="day-badge-icon">🏋️</span>`;
                 } else if (hasOngoing) {
                     indicatorHtml = `<span class="day-badge-icon">⚡</span>`;
+                } else if (isRestDay) {
+                    indicatorHtml = `<span class="day-badge-icon dot-rest-indicator">🟡</span>`;
                 }
 
                 cell.innerHTML = `
@@ -355,9 +362,8 @@
                 daysGrid.appendChild(cell);
             }
 
-            if (countNumber) {
-                countNumber.textContent = monthCompletedCount;
-            }
+            if (countNumber) countNumber.textContent = monthCompletedCount;
+            if (restNumber) restNumber.textContent = monthRestCount;
 
             // Padding bulan berikutnya
             const totalCells = startPadding + totalDays;
@@ -397,12 +403,13 @@
             });
         }
 
-        // --- 3. MODAL DETAIL LATIHAN ---
+        // --- 3. MODAL DETAIL LATIHAN & REST DAY ---
         function openDayModal(dateKey, workouts) {
             const parts = dateKey.split('-');
             const ddmmyyyy = `${parts[2]}/${parts[1]}/${parts[0]}`;
             const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
             const dayName = dObj.toLocaleDateString('id-ID', { weekday: 'long' });
+            const isRestDay = !!restDaysMap[dateKey];
 
             if (modalDateTitle) {
                 modalDateTitle.textContent = `📅 ${dayName}, ${ddmmyyyy}`;
@@ -411,13 +418,35 @@
             if (!modalContainer) return;
             modalContainer.innerHTML = '';
 
+            let html = '';
+
+            // Rest day alert / banner
+            if (isRestDay) {
+                html += `
+                    <div class="calendar-rest-banner mb-3 p-3 rounded" style="background: rgba(245, 158, 11, 0.12); border: 1.5px solid #f59e0b;">
+                        <div class="flex-between align-center">
+                            <div class="d-flex align-center flex-gap-sm">
+                                <span style="font-size: 1.5rem;">🟡</span>
+                                <div>
+                                    <strong style="color: #f59e0b; display: block;">Hari Istirahat (Rest Day)</strong>
+                                    <span class="text-xs text-muted">Pemulihan otot aktif & streak konsistensimu tetap aman!</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-small btn-outline action-toggle-rest" data-date="${dateKey}" style="border-color: rgba(245, 158, 11, 0.5); color: #f59e0b; font-size: 0.75rem;">
+                                Batalkan
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
             if (workouts && workouts.length > 0) {
-                let html = `<p class="text-sm text-muted mb-3">Ditemukan <strong>${workouts.length} sesi latihan</strong> pada tanggal ${ddmmyyyy}:</p>`;
+                html += `<p class="text-sm text-muted mb-3">Ditemukan <strong>${workouts.length} sesi latihan</strong> pada tanggal ${ddmmyyyy}:</p>`;
 
                 workouts.forEach(w => {
                     const isDone = w.status === 'completed';
                     html += `
-                        <div class="calendar-workout-item">
+                        <div class="calendar-workout-item mb-3">
                             <div class="flex-between align-center mb-2">
                                 <h4 class="m-0 text-primary" style="font-size: 1.05rem;">${w.name}</h4>
                                 <span class="badge badge-${isDone ? 'success' : 'warning'}">
@@ -425,20 +454,23 @@
                                 </span>
                             </div>
 
-                            <div class="workout-meta mb-2">
+                            <div class="workout-meta mb-2 flex-gap-sm">
                                 <span class="badge badge-info">${w.exercise_count} gerakan</span>
                                 ${w.duration ? `<span class="badge badge-secondary">⏱️ ${w.duration} menit</span>` : ''}
+                                ${w.estimated_calories ? `<span class="badge badge-warning">🔥 ${w.estimated_calories} kkal</span>` : ''}
                             </div>
 
                             ${w.exercises && w.exercises.length > 0 ? `
                                 <div class="mt-2 mb-3 p-2 rounded" style="background: var(--card-bg); border: 1px solid var(--border-light); font-size: 0.85rem;">
                                     <strong class="d-block text-xs text-muted mb-1 text-uppercase">Rincian Gerakan:</strong>
                                     <ul style="margin: 0; padding-left: 18px;">
-                                        ${w.exercises.map(ex => `
-                                            <li class="mb-1">
-                                                <strong>${ex.name}</strong> — ${ex.sets} set &bull; maks ${ex.weight} kg (${ex.reps} reps)
-                                            </li>
-                                        `).join('')}
+                                        ${w.exercises.map(ex => {
+                                            const isCardio = (ex.category || '').toLowerCase() === 'cardio';
+                                            if (isCardio) {
+                                                return `<li class="mb-1"><strong>${ex.name}</strong> (Kardio) — ${ex.reps} menit</li>`;
+                                            }
+                                            return `<li class="mb-1"><strong>${ex.name}</strong> — ${ex.sets} set &bull; maks ${ex.weight} kg (${ex.reps} reps)</li>`;
+                                        }).join('')}
                                     </ul>
                                 </div>
                             ` : ''}
@@ -459,20 +491,60 @@
                         <a href="{{ route('workouts.create') }}?date=${dateKey}&new=1" class="btn btn-outline btn-small">+ Catat Latihan Lain (${ddmmyyyy})</a>
                     </div>
                 `;
-
-                modalContainer.innerHTML = html;
-            } else {
-                modalContainer.innerHTML = `
+            } else if (!isRestDay) {
+                html += `
                     <div class="text-center py-4">
                         <div style="font-size: 2.8rem; margin-bottom: 12px;">🛋️</div>
-                        <h4 class="mb-1">Belum Ada Latihan</h4>
+                        <h4 class="mb-1">Belum Ada Sesi Latihan</h4>
                         <p class="text-muted text-sm mb-4">Tidak ada sesi latihan yang dicatat pada ${dayName}, ${ddmmyyyy}.</p>
-                        <a href="{{ route('workouts.create') }}?date=${dateKey}&new=1" class="btn btn-primary btn-small">
-                            + Mulai Latihan pada Tanggal Ini (${ddmmyyyy})
-                        </a>
+                        <div class="d-flex flex-column align-center flex-gap-sm" style="max-width: 320px; margin: 0 auto;">
+                            <a href="{{ route('workouts.create') }}?date=${dateKey}&new=1" class="btn btn-primary btn-small w-100">
+                                + Catat Latihan (${ddmmyyyy})
+                            </a>
+                            <button type="button" class="btn btn-outline btn-small w-100 action-toggle-rest" data-date="${dateKey}" style="border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">
+                                🛌 Jadikan Hari Ini Rest Day (Kuning)
+                            </button>
+                        </div>
                     </div>
                 `;
             }
+
+            modalContainer.innerHTML = html;
+
+            // Bind toggle rest day inside modal
+            modalContainer.querySelectorAll('.action-toggle-rest').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const btnDate = this.getAttribute('data-date');
+                    this.disabled = true;
+                    try {
+                        const res = await fetch("{{ route('rest-days.toggle') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({ date: btnDate })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            if (data.is_rest_day) {
+                                restDaysMap[btnDate] = { date: btnDate, notes: 'Rest Day' };
+                            } else {
+                                delete restDaysMap[btnDate];
+                            }
+                            renderHevyHeatmap();
+                            renderMonthlyCalendar();
+                            openDayModal(btnDate, workouts);
+                        } else {
+                            alert(data.message || 'Gagal mengubah Rest Day');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Terjadi kesalahan jaringan.');
+                    }
+                });
+            });
 
             modal.classList.add('active');
         }

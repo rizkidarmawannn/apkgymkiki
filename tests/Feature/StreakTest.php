@@ -110,4 +110,52 @@ class StreakTest extends TestCase
         $response->assertSee('HARI STREAK');
         $response->assertSee('streak-section');
     }
+
+    public function test_rest_day_preserves_streak()
+    {
+        $user = User::factory()->create();
+
+        // Workout yesterday + Rest Day today => streak is 2 and status is 'rest'
+        Workout::create([
+            'user_id' => $user->id,
+            'name' => 'Kemarin',
+            'date' => Carbon::yesterday()->format('Y-m-d'),
+            'status' => 'completed',
+        ]);
+
+        \App\Models\RestDay::create([
+            'user_id' => $user->id,
+            'date' => Carbon::today()->format('Y-m-d'),
+        ]);
+
+        $streak = StreakService::getStreakData($user->id);
+
+        $this->assertEquals(2, $streak['current_streak']);
+        $this->assertEquals('rest', $streak['status']);
+        $this->assertTrue($streak['is_rest_today']);
+    }
+
+    public function test_toggle_rest_day_route()
+    {
+        $user = User::factory()->create();
+        $today = Carbon::today()->format('Y-m-d');
+
+        // Toggle ON
+        $response = $this->actingAs($user)->postJson(route('rest-days.toggle'), [
+            'date' => $today,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true, 'is_rest_day' => true]);
+        $this->assertEquals(1, \App\Models\RestDay::where('user_id', $user->id)->count());
+
+        // Toggle OFF
+        $response2 = $this->actingAs($user)->postJson(route('rest-days.toggle'), [
+            'date' => $today,
+        ]);
+
+        $response2->assertStatus(200);
+        $response2->assertJson(['success' => true, 'is_rest_day' => false]);
+        $this->assertEquals(0, \App\Models\RestDay::where('user_id', $user->id)->count());
+    }
 }

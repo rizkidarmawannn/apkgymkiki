@@ -15,6 +15,7 @@ class Workout extends Model
         'date',
         'duration',
         'duration_seconds',
+        'estimated_calories',
         'notes',
         'status',
     ];
