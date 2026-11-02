@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Gym Kiki — @yield('title', 'Beranda')</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
-    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('favicon-64.png') }}">
-    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('favicon-192.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ time() }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ time() }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}?v={{ time() }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}?v={{ time() }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v={{ time() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ time() }}">
@@ -33,8 +35,8 @@
     <nav class="top-nav">
         <div class="nav-container">
             <a href="{{ route('dashboard') }}" class="nav-brand">
-                <img src="{{ asset('images/logo-icon-transparent.png') }}" alt="GYM KIKI" class="nav-brand-logo">
-                <span class="nav-brand-text">GYM <span class="brand-accent">KIKI</span></span>
+                <img src="{{ asset('images/logo-icon-transparent.png') }}?v={{ time() }}" alt="AGK Gym Kiki" class="nav-brand-logo">
+                <span class="nav-brand-text">AGK <span class="brand-accent">GYM KIKI</span></span>
             </a>
             <div class="nav-links">
                 <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">

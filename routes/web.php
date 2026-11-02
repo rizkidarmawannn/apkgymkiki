@@ -10,7 +10,18 @@ use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\WorkoutController;
 use Illuminate\Support\Facades\Route;
 
-// Guest routes
+// Public favicon & guest routes
+Route::get('/favicon.ico', function () {
+    $path = public_path('favicon.ico');
+    if (file_exists($path)) {
+        return response(file_get_contents($path), 200, [
+            'Content-Type' => 'image/x-icon',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+    abort(404);
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/', fn() => redirect()->route('login'));
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
