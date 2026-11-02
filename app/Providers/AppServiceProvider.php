@@ -29,12 +29,24 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             if (Auth::check()) {
                 $userId = Auth::id();
-                $activeWorkout = Workout::where('user_id', $userId)
-                    ->where('status', 'in_progress')
-                    ->with('workoutExercises.exercise')
-                    ->latest('id')
-                    ->first();
-                $streakData = \App\Services\StreakService::getStreakData($userId);
+                $activeWorkout = null;
+                $streakData = null;
+
+                try {
+                    $activeWorkout = Workout::where('user_id', $userId)
+                        ->where('status', 'in_progress')
+                        ->with('workoutExercises.exercise')
+                        ->latest('id')
+                        ->first();
+                } catch (\Throwable $e) {
+                    $activeWorkout = null;
+                }
+
+                try {
+                    $streakData = \App\Services\StreakService::getStreakData($userId);
+                } catch (\Throwable $e) {
+                    $streakData = null;
+                }
 
                 $view->with('activeWorkout', $activeWorkout)
                      ->with('streakData', $streakData);

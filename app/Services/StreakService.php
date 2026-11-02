@@ -11,19 +11,27 @@ class StreakService
     public static function getStreakData(int $userId): array
     {
         // 1. Get completed workout dates (Y-m-d)
-        $workoutDates = Workout::where('user_id', $userId)
-            ->where('status', 'completed')
-            ->pluck('date')
-            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
-            ->unique()
-            ->values();
+        try {
+            $workoutDates = Workout::where('user_id', $userId)
+                ->where('status', 'completed')
+                ->pluck('date')
+                ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+                ->unique()
+                ->values();
+        } catch (\Throwable $e) {
+            $workoutDates = collect();
+        }
 
         // 2. Get rest day dates (Y-m-d)
-        $restDates = RestDay::where('user_id', $userId)
-            ->pluck('date')
-            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
-            ->unique()
-            ->values();
+        try {
+            $restDates = RestDay::where('user_id', $userId)
+                ->pluck('date')
+                ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+                ->unique()
+                ->values();
+        } catch (\Throwable $e) {
+            $restDates = collect();
+        }
 
         // 3. Union of all active dates (workout OR rest day maintains the chain)
         $activeDates = $workoutDates->concat($restDates)->unique()->sortDesc()->values();
